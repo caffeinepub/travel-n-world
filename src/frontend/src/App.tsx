@@ -11,6 +11,7 @@ import Destinations from "./pages/Destinations";
 import Home from "./pages/Home";
 import Partner from "./pages/Partner";
 import Partners from "./pages/Partners";
+import Pricing from "./pages/Pricing";
 import Services from "./pages/Services";
 
 const rootRoute = createRootRoute({
@@ -53,6 +54,12 @@ const partnersRoute = createRoute({
   component: Partners,
 });
 
+const pricingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/pricing",
+  component: Pricing,
+});
+
 const contactRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/contact",
@@ -66,6 +73,7 @@ const routeTree = rootRoute.addChildren([
   destinationsRoute,
   partnerRoute,
   partnersRoute,
+  pricingRoute,
   contactRoute,
 ]);
 

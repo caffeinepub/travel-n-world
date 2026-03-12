@@ -9,6 +9,7 @@ const navLinks = [
   { label: "Services", to: "/services" },
   { label: "Destinations", to: "/destinations" },
   { label: "Partners", to: "/partners" },
+  { label: "Pricing", to: "/pricing" },
   { label: "Partner Registration", to: "/partner" },
   { label: "Contact", to: "/contact" },
 ];
@@ -59,8 +60,8 @@ export default function Navbar() {
               <Link
                 key={link.to}
                 to={link.to}
-                data-ocid={`nav.link.${i + 1}`}
-                className={`nav-link px-3.5 py-2 text-sm font-medium rounded-lg transition-colors font-display ${
+                data-ocid={`nav.link.${i + 2}`}
+                className={`nav-link px-3 py-2 text-sm font-medium rounded-lg transition-colors font-display ${
                   currentPath === link.to
                     ? "text-primary font-semibold active"
                     : "text-gray-600 hover:text-primary hover:bg-royal-50"
@@ -76,7 +77,7 @@ export default function Navbar() {
             <Button
               asChild
               data-ocid="nav.join_button"
-              className="red-gradient hover:opacity-90 text-white font-semibold shadow-red border-0 rounded-xl px-6 h-10 transition-all hover:shadow-lg"
+              className="red-gradient hover:opacity-90 text-white font-semibold shadow-red border-0 rounded-xl px-5 h-10 transition-all hover:shadow-lg text-sm"
             >
               <Link to="/partner">
                 Join Now <ChevronRight className="h-4 w-4 ml-1" />
@@ -108,7 +109,7 @@ export default function Navbar() {
               <Link
                 key={link.to}
                 to={link.to}
-                data-ocid={`nav.link.${i + 1}`}
+                data-ocid={`nav.link.${i + 2}`}
                 className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   currentPath === link.to
                     ? "bg-royal-100 text-primary font-semibold"
