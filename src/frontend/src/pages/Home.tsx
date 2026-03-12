@@ -1,3 +1,4 @@
+import { TravelLeadsSections } from "@/components/TravelLeadsSections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -248,6 +249,316 @@ const testimonials = [
   },
 ];
 
+// ── Customer Reviews Data ───────────────────────────────────────────────────
+const customerReviews = [
+  {
+    name: "Rahul Sharma",
+    city: "Delhi",
+    rating: 5,
+    review:
+      "Great experience booking our Dubai trip through Travel N World. The team was very professional and got us the best package rates. Highly recommended!",
+    initials: "RS",
+  },
+  {
+    name: "Priya Mehta",
+    city: "Mumbai",
+    rating: 5,
+    review:
+      "Very helpful travel partners and fast support. Any query I had was resolved within hours. The B2B platform is a game-changer for travel agents.",
+    initials: "PM",
+  },
+  {
+    name: "Aman Gupta",
+    city: "Jaipur",
+    rating: 4,
+    review:
+      "Best B2B travel platform for agents. I've increased my bookings by 40% since joining Travel N World. The verified partner network is excellent.",
+    initials: "AG",
+  },
+  {
+    name: "Sunita Rao",
+    city: "Bangalore",
+    rating: 5,
+    review:
+      "Booking international packages has never been easier. Travel N World provides great deals with instant confirmation. My clients are very happy!",
+    initials: "SR",
+  },
+  {
+    name: "Vikram Nair",
+    city: "Chennai",
+    rating: 5,
+    review:
+      "I joined as a travel partner 6 months ago and already have 200+ successful bookings. The support team and resources are outstanding.",
+    initials: "VN",
+  },
+  {
+    name: "Anita Kapoor",
+    city: "Hyderabad",
+    rating: 4,
+    review:
+      "Travel N World has a wide range of destinations and competitive pricing. My corporate clients love the seamless booking experience.",
+    initials: "AK",
+  },
+  {
+    name: "Suresh Bansal",
+    city: "Kolkata",
+    rating: 5,
+    review:
+      "Excellent platform for travel agents. The daily leads I receive have transformed my business. The quality of inquiries is very high.",
+    initials: "SB",
+  },
+  {
+    name: "Neha Singh",
+    city: "Ahmedabad",
+    rating: 5,
+    review:
+      "Travel N World is the most reliable B2B travel platform I have used. Great packages, fast support, and verified partners. Truly trustworthy!",
+    initials: "NS",
+  },
+  {
+    name: "Deepak Malhotra",
+    city: "Pune",
+    rating: 4,
+    review:
+      "The platform helped me connect with international tour operators and offer better packages to my clients. My revenue has grown significantly.",
+    initials: "DM",
+  },
+];
+
+// ── Customer Reviews Slider ───────────────────────────────────────────────────
+function CustomerReviewsSlider() {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [slidesPerPage, setSlidesPerPage] = useState(3);
+  const autoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      if (window.innerWidth < 640) setSlidesPerPage(1);
+      else if (window.innerWidth < 1024) setSlidesPerPage(2);
+      else setSlidesPerPage(3);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  const totalPages = Math.ceil(customerReviews.length / slidesPerPage);
+
+  useEffect(() => {
+    autoTimer.current = setInterval(() => {
+      setCurrentPage((p) => (p + 1) % totalPages);
+    }, 4000);
+    return () => {
+      if (autoTimer.current) clearInterval(autoTimer.current);
+    };
+  }, [totalPages]);
+
+  const resetTimer = () => {
+    if (autoTimer.current) clearInterval(autoTimer.current);
+    autoTimer.current = setInterval(() => {
+      setCurrentPage((p) => (p + 1) % totalPages);
+    }, 4000);
+  };
+
+  const goTo = (page: number) => {
+    setCurrentPage(page);
+    resetTimer();
+  };
+
+  const prev = () => {
+    goTo((currentPage - 1 + totalPages) % totalPages);
+  };
+  const next = () => {
+    goTo((currentPage + 1) % totalPages);
+  };
+
+  const visibleReviews = customerReviews.slice(
+    currentPage * slidesPerPage,
+    currentPage * slidesPerPage + slidesPerPage,
+  );
+
+  return (
+    <section className="section-padding" style={{ background: "#F5F7FA" }}>
+      <div className="container-custom">
+        <div className="text-center mb-14 reveal">
+          <span className="section-label-red">Customer Testimonials</span>
+          <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-foreground gold-line gold-line-center">
+            What Our Customers Say
+          </h2>
+          <p className="text-muted-foreground mt-5 max-w-xl mx-auto">
+            Thousands of travel agents and partners trust Travel N World for
+            reliable B2B travel solutions across India.
+          </p>
+          {/* Overall rating */}
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Star
+                  key={n}
+                  className="h-4 w-4 fill-[#F59E0B] text-[#F59E0B]"
+                />
+              ))}
+            </div>
+            <span className="font-bold text-[#1E40AF]">4.8 / 5</span>
+            <span className="text-[#6B7280] text-sm">
+              · 7,000+ verified reviews
+            </span>
+          </div>
+        </div>
+
+        {/* Cards */}
+        <div className="relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[260px]">
+            {visibleReviews.map((review, i) => (
+              <div
+                key={`${review.name}-${currentPage}`}
+                data-ocid={`reviews.item.${i + 1}`}
+                className="reveal"
+                style={{
+                  background: "white",
+                  borderRadius: "12px",
+                  padding: "28px",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                  border: "1px solid oklch(93 0.01 240)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
+                  animation: "fadeSlideIn 0.35s ease both",
+                  animationDelay: `${i * 0.08}s`,
+                }}
+              >
+                {/* Stars */}
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      className={`h-4 w-4 ${n <= review.rating ? "fill-[#F59E0B] text-[#F59E0B]" : "text-gray-200 fill-gray-200"}`}
+                    />
+                  ))}
+                </div>
+                {/* Review text */}
+                <p className="text-[#374151] text-sm leading-relaxed flex-1 italic">
+                  "{review.review}"
+                </p>
+                {/* Author */}
+                <div
+                  className="flex items-center gap-3 pt-2"
+                  style={{ borderTop: "1px solid oklch(93 0.01 240)" }}
+                >
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)",
+                    }}
+                  >
+                    {review.initials}
+                  </div>
+                  <div>
+                    <div className="font-bold text-[#111827] text-sm">
+                      {review.name}
+                    </div>
+                    <div className="text-[#6B7280] text-xs flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {review.city}
+                    </div>
+                  </div>
+                  <div className="ml-auto">
+                    <span
+                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{
+                        background: "oklch(38 0.18 264 / 0.08)",
+                        color: "#1E40AF",
+                      }}
+                    >
+                      <BadgeCheck className="h-3 w-3" />
+                      Verified
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Prev/Next arrows */}
+          <button
+            type="button"
+            data-ocid="reviews.pagination_prev"
+            onClick={prev}
+            className="absolute top-1/2 -translate-y-1/2 -left-5 hidden md:flex w-10 h-10 rounded-full items-center justify-center transition-all hover:scale-110"
+            style={{
+              background: "#1E40AF",
+              color: "white",
+              boxShadow: "0 4px 12px rgba(30,64,175,0.3)",
+            }}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            data-ocid="reviews.pagination_next"
+            onClick={next}
+            className="absolute top-1/2 -translate-y-1/2 -right-5 hidden md:flex w-10 h-10 rounded-full items-center justify-center transition-all hover:scale-110"
+            style={{
+              background: "#1E40AF",
+              color: "white",
+              boxShadow: "0 4px 12px rgba(30,64,175,0.3)",
+            }}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Dot indicators */}
+        <div className="flex items-center justify-center gap-2 mt-10">
+          {Array.from({ length: totalPages }, (_, i) => i).map((page) => (
+            <button
+              type="button"
+              key={`review-page-${page}`}
+              data-ocid={"reviews.tab"}
+              onClick={() => goTo(page)}
+              className="rounded-full transition-all"
+              style={{
+                width: page === currentPage ? "32px" : "10px",
+                height: "10px",
+                background:
+                  page === currentPage ? "#1E40AF" : "oklch(78 0.04 240)",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Mobile prev/next */}
+        <div className="flex items-center justify-center gap-4 mt-6 md:hidden">
+          <button
+            type="button"
+            onClick={prev}
+            className="flex w-10 h-10 rounded-full items-center justify-center"
+            style={{ background: "#1E40AF", color: "white" }}
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={next}
+            className="flex w-10 h-10 rounded-full items-center justify-center"
+            style={{ background: "#1E40AF", color: "white" }}
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 // ── Hero Slider Component ────────────────────────────────────────────────────
 const heroSlides = [
   {
@@ -376,9 +687,9 @@ function HeroSection() {
             className="font-bold text-3xl md:text-4xl lg:text-5xl text-white mb-3 leading-tight"
             style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800 }}
           >
-            Explore the World with
+            India's Trusted B2B
             <br />
-            <span style={{ color: "#ffffff" }}>Travel N World</span>
+            <span style={{ color: "#ffffff" }}>Travel Partner Network</span>
           </h1>
           <p
             className="text-base md:text-lg"
@@ -747,6 +1058,34 @@ function HeroSection() {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
+
+const SHOWCASE_GRADIENTS = [
+  "linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)",
+  "linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)",
+  "linear-gradient(135deg, #4338CA 0%, #818CF8 100%)",
+  "linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)",
+  "linear-gradient(135deg, #0369A1 0%, #38BDF8 100%)",
+  "linear-gradient(135deg, #065F46 0%, #34D399 100%)",
+  "linear-gradient(135deg, #9D174D 0%, #F472B6 100%)",
+  "linear-gradient(135deg, #1E3A8A 0%, #60A5FA 100%)",
+  "linear-gradient(135deg, #134E4A 0%, #5EEAD4 100%)",
+  "linear-gradient(135deg, #78350F 0%, #FCD34D 100%)",
+];
+
+function getShowcaseInitials(name: string): string {
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+function getShowcaseGradient(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) % SHOWCASE_GRADIENTS.length;
+  }
+  return SHOWCASE_GRADIENTS[Math.abs(hash) % SHOWCASE_GRADIENTS.length];
+}
+
 export default function Home() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -819,6 +1158,42 @@ export default function Home() {
       <HeroSection />
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* OVERALL RATING BADGE */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div
+        className="bg-white py-4"
+        style={{ borderBottom: "1px solid oklch(92 0.01 240)" }}
+      >
+        <div className="container-custom flex justify-center">
+          <div
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-full"
+            style={{
+              background: "white",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.10)",
+              border: "1px solid oklch(92 0.01 240)",
+            }}
+          >
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <Star
+                  key={n}
+                  className="h-5 w-5 fill-[#F59E0B] text-[#F59E0B]"
+                />
+              ))}
+            </div>
+            <span className="font-bold text-lg text-[#1E40AF]">4.8</span>
+            <span className="text-[#374151] text-sm font-medium hidden sm:inline">
+              Average Rating
+            </span>
+            <span className="text-[#6B7280] text-sm">
+              from <strong className="text-[#111827]">7,000+</strong> Customer
+              Reviews
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* TRUST STATISTICS BAR */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <section
@@ -842,7 +1217,7 @@ export default function Home() {
               <StatCounter
                 target={150}
                 suffix="+"
-                label="Verified Travel Partners"
+                label="Verified Travel Partners Across India"
                 ocid="hero.stats.partners"
               />
             </div>
@@ -880,13 +1255,30 @@ export default function Home() {
               <StatCounter
                 target={50}
                 suffix="+"
-                label="Global Destinations"
+                label="Popular Destinations"
                 ocid="hero.stats.destinations"
+              />
+            </div>
+
+            {/* Stat 4 */}
+            <div className="flex flex-1 items-center justify-center gap-4 px-6 py-2">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "oklch(78 0.16 85 / 0.15)" }}
+              >
+                <Star className="h-6 w-6 fill-[#F59E0B] text-[#F59E0B]" />
+              </div>
+              <StatCounter
+                target={7000}
+                suffix="+"
+                label="Happy Customer Reviews"
+                ocid="hero.stats.reviews"
               />
             </div>
           </div>
         </div>
       </section>
+      <TravelLeadsSections />
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* SERVICES */}
@@ -1503,6 +1895,11 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* CUSTOMER REVIEWS SLIDER */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <CustomerReviewsSlider />
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* PARTNER REGISTRATION CTA BANNER */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="section-padding bg-royal-50">
@@ -1908,6 +2305,154 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* OUR PRESENCE ACROSS INDIA */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="py-16" style={{ background: "#EFF6FF" }}>
+        <div className="container-custom">
+          <div className="text-center mb-10 reveal">
+            <span className="section-label-red">Pan-India Network</span>
+            <h2
+              className="font-bold text-3xl md:text-4xl lg:text-5xl text-foreground mb-4"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
+            >
+              Our Presence Across India
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Connecting travel agents and partners across major cities in India
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            {[
+              { name: "Delhi", index: 1 },
+              { name: "Mumbai", index: 2 },
+              { name: "Jaipur", index: 3 },
+              { name: "Ahmedabad", index: 4 },
+              { name: "Bangalore", index: 5 },
+              { name: "Kolkata", index: 6 },
+              { name: "Hyderabad", index: 7 },
+              { name: "Chennai", index: 8 },
+              { name: "Goa", index: 9 },
+              { name: "Lucknow", index: 10 },
+            ].map((city) => (
+              <div
+                key={city.name}
+                data-ocid={`presence.city.${city.index}`}
+                className="reveal flex items-center gap-2 px-5 py-3 bg-white rounded-xl shadow-sm border border-blue-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
+              >
+                <MapPin className="h-4 w-4 text-primary group-hover:text-red-500 transition-colors" />
+                <span className="font-semibold text-gray-800 text-sm group-hover:text-primary transition-colors">
+                  {city.name}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-muted-foreground text-sm mt-8 reveal">
+            + 40 more cities with growing partner presence
+          </p>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* TRUSTED TRAVEL PARTNERS SHOWCASE */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section
+        className="py-16 overflow-hidden"
+        style={{ background: "#F8FAFF" }}
+      >
+        <div className="container-custom">
+          <div className="text-center mb-10 reveal">
+            <span className="section-label-red">Partner Network</span>
+            <h2
+              className="font-bold text-3xl md:text-4xl lg:text-5xl text-foreground mb-4"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
+            >
+              Trusted Travel Partners Across India
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Partnered with verified travel agencies from every corner of India
+            </p>
+          </div>
+        </div>
+
+        {/* Scrolling marquee with fade masks */}
+        <div
+          className="relative"
+          style={{
+            maskImage:
+              "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
+          }}
+        >
+          <div className="flex gap-5 partner-marquee">
+            {[
+              { name: "Horizon Travels", city: "Mumbai" },
+              { name: "SkyWing Tours", city: "Delhi" },
+              { name: "Royal Journeys", city: "Bangalore" },
+              { name: "Blue Ocean Trips", city: "Chennai" },
+              { name: "Golden Gate Travel", city: "Jaipur" },
+              { name: "Summit Adventures", city: "Ahmedabad" },
+              { name: "Pearl Holidays", city: "Goa" },
+              { name: "Sunrise Tours", city: "Kolkata" },
+              { name: "Heritage Explorers", city: "Delhi" },
+              { name: "Coastal Dreams", city: "Hyderabad" },
+              { name: "Alpine Travels", city: "Lucknow" },
+              { name: "Metro Voyages", city: "Mumbai" },
+              { name: "Desi Wanderers", city: "Jaipur" },
+              { name: "India Circuit", city: "Delhi" },
+              { name: "Lotus Journeys", city: "Bangalore" },
+              { name: "Emerald Tours", city: "Goa" },
+              { name: "Spice Route Travel", city: "Chennai" },
+              { name: "Himalayan Trails", city: "Lucknow" },
+              { name: "Desert Dunes Tours", city: "Jaipur" },
+              { name: "Backwater Bliss", city: "Hyderabad" },
+              // Duplicate for seamless loop
+              { name: "Horizon Travels", city: "Mumbai" },
+              { name: "SkyWing Tours", city: "Delhi" },
+              { name: "Royal Journeys", city: "Bangalore" },
+              { name: "Blue Ocean Trips", city: "Chennai" },
+              { name: "Golden Gate Travel", city: "Jaipur" },
+              { name: "Summit Adventures", city: "Ahmedabad" },
+              { name: "Pearl Holidays", city: "Goa" },
+              { name: "Sunrise Tours", city: "Kolkata" },
+              { name: "Heritage Explorers", city: "Delhi" },
+              { name: "Coastal Dreams", city: "Hyderabad" },
+            ].map((partner, i) => (
+              <div
+                key={`${partner.name}-${i}`}
+                className="flex-shrink-0 flex flex-col items-center gap-2 bg-white rounded-2xl shadow-sm border border-blue-50 px-5 py-4 w-28 hover:shadow-md transition-shadow duration-200"
+              >
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md ring-2 ring-white"
+                  style={{ background: getShowcaseGradient(partner.name) }}
+                >
+                  {getShowcaseInitials(partner.name)}
+                </div>
+                <span className="text-xs font-semibold text-gray-800 text-center leading-tight line-clamp-2">
+                  {partner.name}
+                </span>
+                <span className="text-[10px] text-gray-400">
+                  {partner.city}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center mt-10 reveal">
+          <Link to="/partners" data-ocid="showcase.view_all.button">
+            <button
+              type="button"
+              className="px-8 py-3 rounded-xl font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              style={{ background: "#1E40AF" }}
+            >
+              View All Partners →
+            </button>
+          </Link>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* NEWSLETTER */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="py-16 bg-primary">
@@ -1954,10 +2499,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* CTA BANNER (BOTTOM) */}
-      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="section-padding bg-royal-50">
         <div className="container-custom">
           <div className="blue-gradient rounded-3xl p-10 md:p-16 text-center relative overflow-hidden">

@@ -10,7 +10,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import { MapPin, Search, ShieldCheck, Star } from "lucide-react";
+import { MapPin, Phone, Search, ShieldCheck, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 interface Agency {
@@ -23,7 +23,22 @@ interface Agency {
   speciality: string;
   yearsInBusiness: number;
   verified: boolean;
+  phone: string;
 }
+
+const CITIES = [
+  "All Cities",
+  "Delhi",
+  "Mumbai",
+  "Jaipur",
+  "Ahmedabad",
+  "Bangalore",
+  "Kolkata",
+  "Chennai",
+  "Hyderabad",
+  "Goa",
+  "Lucknow",
+];
 
 const CATEGORIES = [
   "All",
@@ -57,6 +72,7 @@ const agencyData: Agency[] = [
     speciality: "Europe & SE Asia packages",
     yearsInBusiness: 14,
     verified: true,
+    phone: "+91 987654321",
   },
   {
     id: 2,
@@ -68,6 +84,7 @@ const agencyData: Agency[] = [
     speciality: "North India heritage circuits",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 998768765",
   },
   {
     id: 3,
@@ -79,6 +96,7 @@ const agencyData: Agency[] = [
     speciality: "Luxury villa & resort stays",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 889122109",
   },
   {
     id: 4,
@@ -90,17 +108,19 @@ const agencyData: Agency[] = [
     speciality: "Maldives & Bali honeymoon",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 876546543",
   },
   {
     id: 5,
     name: "Summit Adventures",
-    city: "Pune",
+    city: "Lucknow",
     category: "Adventure",
     rating: 4.8,
     reviews: 156,
     speciality: "Himalayan trekking & camping",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 973410987",
   },
   {
     id: 6,
@@ -112,6 +132,7 @@ const agencyData: Agency[] = [
     speciality: "USA, Canada & UK packages",
     yearsInBusiness: 16,
     verified: true,
+    phone: "+91 968234321",
   },
   {
     id: 7,
@@ -123,6 +144,7 @@ const agencyData: Agency[] = [
     speciality: "Sri Lanka & Thailand romance",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 701238765",
   },
   {
     id: 8,
@@ -134,6 +156,7 @@ const agencyData: Agency[] = [
     speciality: "MICE & corporate retreats",
     yearsInBusiness: 12,
     verified: true,
+    phone: "+91 752342109",
   },
   {
     id: 9,
@@ -145,6 +168,7 @@ const agencyData: Agency[] = [
     speciality: "Rajasthan royal tours",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 765436543",
   },
   {
     id: 10,
@@ -156,6 +180,7 @@ const agencyData: Agency[] = [
     speciality: "Beach & island getaways",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 778910987",
   },
   {
     id: 11,
@@ -167,6 +192,7 @@ const agencyData: Agency[] = [
     speciality: "Yatra & pilgrimage groups",
     yearsInBusiness: 13,
     verified: true,
+    phone: "+91 784561234",
   },
   {
     id: 12,
@@ -178,6 +204,7 @@ const agencyData: Agency[] = [
     speciality: "Ladakh & Spiti expeditions",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 790125678",
   },
   {
     id: 13,
@@ -189,6 +216,7 @@ const agencyData: Agency[] = [
     speciality: "Private jet & yacht charters",
     yearsInBusiness: 18,
     verified: true,
+    phone: "+91 803459012",
   },
   {
     id: 14,
@@ -200,6 +228,7 @@ const agencyData: Agency[] = [
     speciality: "South India temple circuits",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 816783456",
   },
   {
     id: 15,
@@ -211,6 +240,7 @@ const agencyData: Agency[] = [
     speciality: "Executive & VIP travel",
     yearsInBusiness: 14,
     verified: true,
+    phone: "+91 829017890",
   },
   {
     id: 16,
@@ -222,17 +252,19 @@ const agencyData: Agency[] = [
     speciality: "Desert safari group tours",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 832341234",
   },
   {
     id: 17,
     name: "Azure Horizons",
-    city: "Pune",
+    city: "Lucknow",
     category: "International",
     rating: 4.8,
     reviews: 167,
     speciality: "Mediterranean cruises",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 845675678",
   },
   {
     id: 18,
@@ -244,6 +276,7 @@ const agencyData: Agency[] = [
     speciality: "Santorini & Amalfi specials",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 858909012",
   },
   {
     id: 19,
@@ -255,6 +288,7 @@ const agencyData: Agency[] = [
     speciality: "Northeast India treks",
     yearsInBusiness: 5,
     verified: true,
+    phone: "+91 861233456",
   },
   {
     id: 20,
@@ -266,6 +300,7 @@ const agencyData: Agency[] = [
     speciality: "Dubai & Abu Dhabi packages",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 894567890",
   },
   {
     id: 21,
@@ -277,6 +312,7 @@ const agencyData: Agency[] = [
     speciality: "Bespoke luxury retreats",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 907892345",
   },
   {
     id: 22,
@@ -288,6 +324,7 @@ const agencyData: Agency[] = [
     speciality: "Char Dham & Kashi yatras",
     yearsInBusiness: 15,
     verified: true,
+    phone: "+91 910126789",
   },
   {
     id: 23,
@@ -299,6 +336,7 @@ const agencyData: Agency[] = [
     speciality: "Australia & New Zealand",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 923450123",
   },
   {
     id: 24,
@@ -310,6 +348,7 @@ const agencyData: Agency[] = [
     speciality: "Destination weddings abroad",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 936784567",
   },
   {
     id: 25,
@@ -321,17 +360,19 @@ const agencyData: Agency[] = [
     speciality: "Western Ghats treks",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 949018901",
   },
   {
     id: 26,
     name: "NextGen Corporate Travel",
-    city: "Pune",
+    city: "Lucknow",
     category: "Corporate",
     rating: 4.9,
     reviews: 198,
     speciality: "Tech company travel desks",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 952342345",
   },
   {
     id: 27,
@@ -343,6 +384,7 @@ const agencyData: Agency[] = [
     speciality: "Family & school excursions",
     yearsInBusiness: 12,
     verified: true,
+    phone: "+91 981236789",
   },
   {
     id: 28,
@@ -354,6 +396,7 @@ const agencyData: Agency[] = [
     speciality: "Royal Rajasthan luxury trains",
     yearsInBusiness: 14,
     verified: true,
+    phone: "+91 974560123",
   },
   {
     id: 29,
@@ -365,6 +408,7 @@ const agencyData: Agency[] = [
     speciality: "Southeast Asia circuits",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 882344567",
   },
   {
     id: 30,
@@ -376,6 +420,7 @@ const agencyData: Agency[] = [
     speciality: "Offbeat India experiences",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 875678901",
   },
   {
     id: 31,
@@ -387,6 +432,7 @@ const agencyData: Agency[] = [
     speciality: "Andaman & Lakshadweep",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 998903456",
   },
   {
     id: 32,
@@ -398,6 +444,7 @@ const agencyData: Agency[] = [
     speciality: "Business class management",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 961237890",
   },
   {
     id: 33,
@@ -409,6 +456,7 @@ const agencyData: Agency[] = [
     speciality: "UNESCO heritage tours",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 704561234",
   },
   {
     id: 34,
@@ -420,6 +468,7 @@ const agencyData: Agency[] = [
     speciality: "Caribbean cruises",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 757895678",
   },
   {
     id: 35,
@@ -431,6 +480,7 @@ const agencyData: Agency[] = [
     speciality: "Desert adventure sports",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 760129012",
   },
   {
     id: 36,
@@ -442,6 +492,7 @@ const agencyData: Agency[] = [
     speciality: "5-star only luxury packages",
     yearsInBusiness: 16,
     verified: true,
+    phone: "+91 773453456",
   },
   {
     id: 37,
@@ -453,6 +504,7 @@ const agencyData: Agency[] = [
     speciality: "College & corporate groups",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 786787890",
   },
   {
     id: 38,
@@ -464,17 +516,19 @@ const agencyData: Agency[] = [
     speciality: "Scandinavia & Iceland",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 799011234",
   },
   {
     id: 39,
     name: "Coastal Bliss Travels",
-    city: "Pune",
+    city: "Lucknow",
     category: "Honeymoon",
     rating: 4.8,
     reviews: 198,
     speciality: "Konkan coast getaways",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 802345678",
   },
   {
     id: 40,
@@ -486,6 +540,7 @@ const agencyData: Agency[] = [
     speciality: "Japan & Korea circuits",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 815679012",
   },
   {
     id: 41,
@@ -497,6 +552,7 @@ const agencyData: Agency[] = [
     speciality: "Bhutan luxury experiences",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 828904567",
   },
   {
     id: 42,
@@ -508,6 +564,7 @@ const agencyData: Agency[] = [
     speciality: "Gujarat cultural tours",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 831238901",
   },
   {
     id: 43,
@@ -519,6 +576,7 @@ const agencyData: Agency[] = [
     speciality: "Multinational travel desk",
     yearsInBusiness: 13,
     verified: true,
+    phone: "+91 844562345",
   },
   {
     id: 44,
@@ -530,6 +588,7 @@ const agencyData: Agency[] = [
     speciality: "Mediterranean & Baltic cruises",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 857896789",
   },
   {
     id: 45,
@@ -541,6 +600,7 @@ const agencyData: Agency[] = [
     speciality: "High altitude mountaineering",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 860120123",
   },
   {
     id: 46,
@@ -552,6 +612,7 @@ const agencyData: Agency[] = [
     speciality: "France & Italy romance",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 893454567",
   },
   {
     id: 47,
@@ -563,6 +624,7 @@ const agencyData: Agency[] = [
     speciality: "Pan-India group specials",
     yearsInBusiness: 14,
     verified: true,
+    phone: "+91 906788901",
   },
   {
     id: 48,
@@ -574,6 +636,7 @@ const agencyData: Agency[] = [
     speciality: "Exclusive palace hotel stays",
     yearsInBusiness: 12,
     verified: true,
+    phone: "+91 919012345",
   },
   {
     id: 49,
@@ -585,6 +648,7 @@ const agencyData: Agency[] = [
     speciality: "Bengal & Odisha tourism",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 922346789",
   },
   {
     id: 50,
@@ -596,17 +660,19 @@ const agencyData: Agency[] = [
     speciality: "South Africa safari",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 935670123",
   },
   {
     id: 51,
     name: "ThunderPass Treks",
-    city: "Pune",
+    city: "Lucknow",
     category: "Adventure",
     rating: 4.7,
     reviews: 123,
     speciality: "Sahyadri & Konkan hikes",
     yearsInBusiness: 5,
     verified: true,
+    phone: "+91 948905678",
   },
   {
     id: 52,
@@ -618,6 +684,7 @@ const agencyData: Agency[] = [
     speciality: "IT sector travel solutions",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 951239012",
   },
   {
     id: 53,
@@ -629,6 +696,7 @@ const agencyData: Agency[] = [
     speciality: "Kerala backwaters romance",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 984563456",
   },
   {
     id: 54,
@@ -640,6 +708,7 @@ const agencyData: Agency[] = [
     speciality: "Budget group packages",
     yearsInBusiness: 15,
     verified: true,
+    phone: "+91 977897890",
   },
   {
     id: 55,
@@ -651,6 +720,7 @@ const agencyData: Agency[] = [
     speciality: "Coorg & Munnar nature tours",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 880121234",
   },
   {
     id: 56,
@@ -662,6 +732,7 @@ const agencyData: Agency[] = [
     speciality: "Maldives specialist",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 873455678",
   },
   {
     id: 57,
@@ -673,6 +744,7 @@ const agencyData: Agency[] = [
     speciality: "Overwater villa experiences",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 996789012",
   },
   {
     id: 58,
@@ -684,6 +756,7 @@ const agencyData: Agency[] = [
     speciality: "Wildlife & jungle safaris",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 969013456",
   },
   {
     id: 59,
@@ -695,6 +768,7 @@ const agencyData: Agency[] = [
     speciality: "Phuket & Phi Phi islands",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 702347890",
   },
   {
     id: 60,
@@ -706,6 +780,7 @@ const agencyData: Agency[] = [
     speciality: "Cost-optimization travel desk",
     yearsInBusiness: 12,
     verified: true,
+    phone: "+91 755671234",
   },
   {
     id: 61,
@@ -717,17 +792,19 @@ const agencyData: Agency[] = [
     speciality: "Spiti & Kinnaur circuits",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 768906789",
   },
   {
     id: 62,
     name: "TourVista Global",
-    city: "Pune",
+    city: "Lucknow",
     category: "International",
     rating: 4.8,
     reviews: 223,
     speciality: "Turkey & Egypt circuits",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 771230123",
   },
   {
     id: 63,
@@ -739,6 +816,7 @@ const agencyData: Agency[] = [
     speciality: "Airline consolidator",
     yearsInBusiness: 13,
     verified: true,
+    phone: "+91 784564567",
   },
   {
     id: 64,
@@ -750,6 +828,7 @@ const agencyData: Agency[] = [
     speciality: "Senior citizen specials",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 797898901",
   },
   {
     id: 65,
@@ -761,6 +840,7 @@ const agencyData: Agency[] = [
     speciality: "Seychelles & Maldives",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 800122345",
   },
   {
     id: 66,
@@ -772,6 +852,7 @@ const agencyData: Agency[] = [
     speciality: "Indonesia & Philippines",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 813456789",
   },
   {
     id: 67,
@@ -783,6 +864,7 @@ const agencyData: Agency[] = [
     speciality: "Rock climbing & rappelling",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 826780123",
   },
   {
     id: 68,
@@ -794,6 +876,7 @@ const agencyData: Agency[] = [
     speciality: "Switzerland & Vienna",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 839014567",
   },
   {
     id: 69,
@@ -805,6 +888,7 @@ const agencyData: Agency[] = [
     speciality: "Rajasthan & MP circuits",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 842348901",
   },
   {
     id: 70,
@@ -816,6 +900,7 @@ const agencyData: Agency[] = [
     speciality: "Charter & private aviation",
     yearsInBusiness: 15,
     verified: true,
+    phone: "+91 855672345",
   },
   {
     id: 71,
@@ -827,17 +912,19 @@ const agencyData: Agency[] = [
     speciality: "Sikkim & Darjeeling trails",
     yearsInBusiness: 5,
     verified: true,
+    phone: "+91 868907890",
   },
   {
     id: 72,
     name: "FestiveFly Groups",
-    city: "Pune",
+    city: "Lucknow",
     category: "Group Tours",
     rating: 4.7,
     reviews: 423,
     speciality: "Festival & event groups",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 891231234",
   },
   {
     id: 73,
@@ -849,6 +936,7 @@ const agencyData: Agency[] = [
     speciality: "Andaman couple packages",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 904565678",
   },
   {
     id: 74,
@@ -860,6 +948,7 @@ const agencyData: Agency[] = [
     speciality: "Africa & Middle East",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 917899012",
   },
   {
     id: 75,
@@ -871,6 +960,7 @@ const agencyData: Agency[] = [
     speciality: "Ladakh & Kashmir",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 920123456",
   },
   {
     id: 76,
@@ -882,6 +972,7 @@ const agencyData: Agency[] = [
     speciality: "Ice trekking & snowboarding",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 933457890",
   },
   {
     id: 77,
@@ -893,6 +984,7 @@ const agencyData: Agency[] = [
     speciality: "Butler service packages",
     yearsInBusiness: 14,
     verified: true,
+    phone: "+91 946781234",
   },
   {
     id: 78,
@@ -904,6 +996,7 @@ const agencyData: Agency[] = [
     speciality: "Bank & finance sector",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 959015678",
   },
   {
     id: 79,
@@ -915,6 +1008,7 @@ const agencyData: Agency[] = [
     speciality: "Goa heritage group tours",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 982349012",
   },
   {
     id: 80,
@@ -926,6 +1020,7 @@ const agencyData: Agency[] = [
     speciality: "Paris & Barcelona romance",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 975673456",
   },
   {
     id: 81,
@@ -937,6 +1032,7 @@ const agencyData: Agency[] = [
     speciality: "Bhutan & Nepal specialist",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 888908901",
   },
   {
     id: 82,
@@ -948,17 +1044,19 @@ const agencyData: Agency[] = [
     speciality: "Telangana & AP tourism",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 871232345",
   },
   {
     id: 83,
     name: "ZenithTravel Co",
-    city: "Pune",
+    city: "Lucknow",
     category: "International",
     rating: 4.8,
     reviews: 212,
     speciality: "Latin America circuits",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 994566789",
   },
   {
     id: 84,
@@ -970,6 +1068,7 @@ const agencyData: Agency[] = [
     speciality: "Gujarat & Kutch tours",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 967890123",
   },
   {
     id: 85,
@@ -981,6 +1080,7 @@ const agencyData: Agency[] = [
     speciality: "Policy & compliance travel",
     yearsInBusiness: 12,
     verified: true,
+    phone: "+91 700124567",
   },
   {
     id: 86,
@@ -992,6 +1092,7 @@ const agencyData: Agency[] = [
     speciality: "Ranthambore & Jim Corbett",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 753458901",
   },
   {
     id: 87,
@@ -1003,6 +1104,7 @@ const agencyData: Agency[] = [
     speciality: "Alleppey & Kumarakom",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 766782345",
   },
   {
     id: 88,
@@ -1014,6 +1116,7 @@ const agencyData: Agency[] = [
     speciality: "Family packages India",
     yearsInBusiness: 13,
     verified: true,
+    phone: "+91 779016789",
   },
   {
     id: 89,
@@ -1025,6 +1128,7 @@ const agencyData: Agency[] = [
     speciality: "Private island bookings",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 782340123",
   },
   {
     id: 90,
@@ -1036,6 +1140,7 @@ const agencyData: Agency[] = [
     speciality: "Aravalli & Rajasthan hikes",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 795674567",
   },
   {
     id: 91,
@@ -1047,6 +1152,7 @@ const agencyData: Agency[] = [
     speciality: "China & Vietnam circuits",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 808909012",
   },
   {
     id: 92,
@@ -1058,6 +1164,7 @@ const agencyData: Agency[] = [
     speciality: "Pharma sector travel",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 811233456",
   },
   {
     id: 93,
@@ -1069,6 +1176,7 @@ const agencyData: Agency[] = [
     speciality: "Nepal & Tibet expeditions",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 824567890",
   },
   {
     id: 94,
@@ -1080,17 +1188,19 @@ const agencyData: Agency[] = [
     speciality: "Maldives water villas",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 837891234",
   },
   {
     id: 95,
     name: "SundownerGroup Co",
-    city: "Pune",
+    city: "Lucknow",
     category: "Group Tours",
     rating: 4.6,
     reviews: 389,
     speciality: "Pilgrimage & religious tours",
     yearsInBusiness: 14,
     verified: true,
+    phone: "+91 840125678",
   },
   {
     id: 96,
@@ -1102,6 +1212,7 @@ const agencyData: Agency[] = [
     speciality: "Japan & Singapore luxury",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 853459012",
   },
   {
     id: 97,
@@ -1113,6 +1224,7 @@ const agencyData: Agency[] = [
     speciality: "USA & Canada specialist",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 866783456",
   },
   {
     id: 98,
@@ -1124,6 +1236,7 @@ const agencyData: Agency[] = [
     speciality: "Goa & Maharashtra tours",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 899017890",
   },
   {
     id: 99,
@@ -1135,6 +1248,7 @@ const agencyData: Agency[] = [
     speciality: "Automotive sector travel",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 902341234",
   },
   {
     id: 100,
@@ -1146,6 +1260,7 @@ const agencyData: Agency[] = [
     speciality: "Mountain biking tours",
     yearsInBusiness: 5,
     verified: true,
+    phone: "+91 915675678",
   },
   {
     id: 101,
@@ -1157,6 +1272,7 @@ const agencyData: Agency[] = [
     speciality: "Sundarbans & NE India",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 928900123",
   },
   {
     id: 102,
@@ -1168,6 +1284,7 @@ const agencyData: Agency[] = [
     speciality: "UK & Oxford tours",
     yearsInBusiness: 12,
     verified: true,
+    phone: "+91 931234567",
   },
   {
     id: 103,
@@ -1179,6 +1296,7 @@ const agencyData: Agency[] = [
     speciality: "Greece & Santorini",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 944568901",
   },
   {
     id: 104,
@@ -1190,6 +1308,7 @@ const agencyData: Agency[] = [
     speciality: "Industrial visits",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 957892345",
   },
   {
     id: 105,
@@ -1201,17 +1320,19 @@ const agencyData: Agency[] = [
     speciality: "Jungle canopy & zipline",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 980126789",
   },
   {
     id: 106,
     name: "DiamondClass Travel",
-    city: "Pune",
+    city: "Lucknow",
     category: "Luxury",
     rating: 4.9,
     reviews: 145,
     speciality: "Business class upgrades",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 973450123",
   },
   {
     id: 107,
@@ -1223,6 +1344,7 @@ const agencyData: Agency[] = [
     speciality: "FMCG sector solutions",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 886784567",
   },
   {
     id: 108,
@@ -1234,6 +1356,7 @@ const agencyData: Agency[] = [
     speciality: "Eco-tourism & farm stays",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 879018901",
   },
   {
     id: 109,
@@ -1245,6 +1368,7 @@ const agencyData: Agency[] = [
     speciality: "East Africa & Kenya",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 992342345",
   },
   {
     id: 110,
@@ -1256,6 +1380,7 @@ const agencyData: Agency[] = [
     speciality: "Langkawi & Coorg",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 965676789",
   },
   {
     id: 111,
@@ -1267,6 +1392,7 @@ const agencyData: Agency[] = [
     speciality: "NRI group tours",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 708901111",
   },
   {
     id: 112,
@@ -1278,6 +1404,7 @@ const agencyData: Agency[] = [
     speciality: "Norway & Finland",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 751232222",
   },
   {
     id: 113,
@@ -1289,6 +1416,7 @@ const agencyData: Agency[] = [
     speciality: "Maharashtra heritage",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 764563333",
   },
   {
     id: 114,
@@ -1300,6 +1428,7 @@ const agencyData: Agency[] = [
     speciality: "Telecom sector desk",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 777894444",
   },
   {
     id: 115,
@@ -1311,17 +1440,19 @@ const agencyData: Agency[] = [
     speciality: "Karnataka adventure sports",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 780125555",
   },
   {
     id: 116,
     name: "Mirage Luxury Travel",
-    city: "Pune",
+    city: "Lucknow",
     category: "Luxury",
     rating: 5.0,
     reviews: 134,
     speciality: "Morocco & Jordan luxury",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 793456666",
   },
   {
     id: 117,
@@ -1333,6 +1464,7 @@ const agencyData: Agency[] = [
     speciality: "Family holiday packages",
     yearsInBusiness: 12,
     verified: true,
+    phone: "+91 806787777",
   },
   {
     id: 118,
@@ -1344,6 +1476,7 @@ const agencyData: Agency[] = [
     speciality: "Portugal & Spain",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 819018888",
   },
   {
     id: 119,
@@ -1355,6 +1488,7 @@ const agencyData: Agency[] = [
     speciality: "Malaysia & Indonesia",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 822349999",
   },
   {
     id: 120,
@@ -1366,6 +1500,7 @@ const agencyData: Agency[] = [
     speciality: "Himalayan foothills",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 835670000",
   },
   {
     id: 121,
@@ -1377,6 +1512,7 @@ const agencyData: Agency[] = [
     speciality: "Logistics sector travel",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 848901357",
   },
   {
     id: 122,
@@ -1388,6 +1524,7 @@ const agencyData: Agency[] = [
     speciality: "Brazil & Argentina",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 851232468",
   },
   {
     id: 123,
@@ -1399,6 +1536,7 @@ const agencyData: Agency[] = [
     speciality: "Overnight desert camps",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 864563579",
   },
   {
     id: 124,
@@ -1410,6 +1548,7 @@ const agencyData: Agency[] = [
     speciality: "Paragliding & skydiving",
     yearsInBusiness: 5,
     verified: true,
+    phone: "+91 897894680",
   },
   {
     id: 125,
@@ -1421,17 +1560,19 @@ const agencyData: Agency[] = [
     speciality: "Turkey & Cappadocia",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 900125791",
   },
   {
     id: 126,
     name: "NationWide Groups",
-    city: "Pune",
+    city: "Lucknow",
     category: "Group Tours",
     rating: 4.7,
     reviews: 445,
     speciality: "All-India group circuits",
     yearsInBusiness: 15,
     verified: true,
+    phone: "+91 913456802",
   },
   {
     id: 127,
@@ -1443,6 +1584,7 @@ const agencyData: Agency[] = [
     speciality: "Sri Lanka luxury trains",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 926787913",
   },
   {
     id: 128,
@@ -1454,6 +1596,7 @@ const agencyData: Agency[] = [
     speciality: "Central Asia & Silk Road",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 939018024",
   },
   {
     id: 129,
@@ -1465,6 +1608,7 @@ const agencyData: Agency[] = [
     speciality: "Tamil Nadu coastal tours",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 942349135",
   },
   {
     id: 130,
@@ -1476,6 +1620,7 @@ const agencyData: Agency[] = [
     speciality: "Real estate sector",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 955670246",
   },
   {
     id: 131,
@@ -1487,6 +1632,7 @@ const agencyData: Agency[] = [
     speciality: "River rafting circuits",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 988901470",
   },
   {
     id: 132,
@@ -1498,6 +1644,7 @@ const agencyData: Agency[] = [
     speciality: "Boutique hotel curation",
     yearsInBusiness: 13,
     verified: true,
+    phone: "+91 971232581",
   },
   {
     id: 133,
@@ -1509,6 +1656,7 @@ const agencyData: Agency[] = [
     speciality: "Punjab & Himachal",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 884563692",
   },
   {
     id: 134,
@@ -1520,6 +1668,7 @@ const agencyData: Agency[] = [
     speciality: "Bali all-inclusive",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 877894703",
   },
   {
     id: 135,
@@ -1531,17 +1680,19 @@ const agencyData: Agency[] = [
     speciality: "Premium group experiences",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 990125814",
   },
   {
     id: 136,
     name: "AlphaGlobe Tours",
-    city: "Pune",
+    city: "Lucknow",
     category: "International",
     rating: 4.7,
     reviews: 212,
     speciality: "Russia & Eastern Europe",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 963456925",
   },
   {
     id: 137,
@@ -1553,6 +1704,7 @@ const agencyData: Agency[] = [
     speciality: "Education sector travel",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 706787036",
   },
   {
     id: 138,
@@ -1564,6 +1716,7 @@ const agencyData: Agency[] = [
     speciality: "Sea kayaking & diving",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 759018147",
   },
   {
     id: 139,
@@ -1575,6 +1728,7 @@ const agencyData: Agency[] = [
     speciality: "Mexico & Caribbean",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 762349258",
   },
   {
     id: 140,
@@ -1586,6 +1740,7 @@ const agencyData: Agency[] = [
     speciality: "Agricultural & village stays",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 775670369",
   },
   {
     id: 141,
@@ -1597,6 +1752,7 @@ const agencyData: Agency[] = [
     speciality: "Myanmar & Cambodia luxury",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 788901593",
   },
   {
     id: 142,
@@ -1608,6 +1764,7 @@ const agencyData: Agency[] = [
     speciality: "Media & entertainment",
     yearsInBusiness: 10,
     verified: true,
+    phone: "+91 791232604",
   },
   {
     id: 143,
@@ -1619,6 +1776,7 @@ const agencyData: Agency[] = [
     speciality: "Adventure group treks",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 804563715",
   },
   {
     id: 144,
@@ -1630,6 +1788,7 @@ const agencyData: Agency[] = [
     speciality: "New Zealand & Fiji",
     yearsInBusiness: 8,
     verified: true,
+    phone: "+91 817894826",
   },
   {
     id: 145,
@@ -1641,17 +1800,19 @@ const agencyData: Agency[] = [
     speciality: "Karnataka & Tamil Nadu",
     yearsInBusiness: 7,
     verified: true,
+    phone: "+91 820125937",
   },
   {
     id: 146,
     name: "SilverBell Honeymoon",
-    city: "Pune",
+    city: "Lucknow",
     category: "Honeymoon",
     rating: 4.8,
     reviews: 189,
     speciality: "Dubai & Abu Dhabi",
     yearsInBusiness: 6,
     verified: true,
+    phone: "+91 833456048",
   },
   {
     id: 147,
@@ -1663,6 +1824,7 @@ const agencyData: Agency[] = [
     speciality: "Healthcare sector",
     yearsInBusiness: 11,
     verified: true,
+    phone: "+91 846787159",
   },
   {
     id: 148,
@@ -1674,6 +1836,7 @@ const agencyData: Agency[] = [
     speciality: "International trail runs",
     yearsInBusiness: 5,
     verified: true,
+    phone: "+91 859018260",
   },
   {
     id: 149,
@@ -1685,6 +1848,7 @@ const agencyData: Agency[] = [
     speciality: "Peru & Machu Picchu",
     yearsInBusiness: 9,
     verified: true,
+    phone: "+91 862349371",
   },
   {
     id: 150,
@@ -1696,6 +1860,7 @@ const agencyData: Agency[] = [
     speciality: "All-inclusive luxury resorts",
     yearsInBusiness: 14,
     verified: true,
+    phone: "+91 895670482",
   },
 ];
 
@@ -1722,6 +1887,40 @@ function getPageNumbers(
   return pages;
 }
 
+const LOGO_GRADIENTS = [
+  "linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)",
+  "linear-gradient(135deg, #0F766E 0%, #14B8A6 100%)",
+  "linear-gradient(135deg, #4338CA 0%, #818CF8 100%)",
+  "linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%)",
+  "linear-gradient(135deg, #0369A1 0%, #38BDF8 100%)",
+  "linear-gradient(135deg, #065F46 0%, #34D399 100%)",
+  "linear-gradient(135deg, #9D174D 0%, #F472B6 100%)",
+  "linear-gradient(135deg, #92400E 0%, #FCD34D 100%)",
+  "linear-gradient(135deg, #1E3A8A 0%, #60A5FA 100%)",
+  "linear-gradient(135deg, #134E4A 0%, #5EEAD4 100%)",
+];
+
+function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 10) return phone;
+  const last10 = digits.slice(-10);
+  return `+91 ${last10.slice(0, 2)}XXXX${last10.slice(6)}`;
+}
+
+function getInitials(name: string): string {
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+function getLogoGradient(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) % LOGO_GRADIENTS.length;
+  }
+  return LOGO_GRADIENTS[Math.abs(hash) % LOGO_GRADIENTS.length];
+}
+
 function VerifiedBadge() {
   return (
     <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200">
@@ -1739,6 +1938,7 @@ interface AgencyCardProps {
 }
 
 function AgencyCard({ agency, index }: AgencyCardProps) {
+  const [showContactModal, setShowContactModal] = useState(false);
   return (
     <div
       data-ocid={`partners.card.${index + 1}`}
@@ -1751,12 +1951,12 @@ function AgencyCard({ agency, index }: AgencyCardProps) {
         {/* Top row: avatar + verified badge */}
         <div className="flex items-start justify-between mb-4">
           <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow flex-shrink-0"
+            className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0 ring-2 ring-white"
             style={{
-              background: "linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)",
+              background: getLogoGradient(agency.name),
             }}
           >
-            {agency.name.charAt(0)}
+            {getInitials(agency.name)}
           </div>
           <VerifiedBadge />
         </div>
@@ -1801,7 +2001,71 @@ function AgencyCard({ agency, index }: AgencyCardProps) {
             {agency.yearsInBusiness} yrs exp
           </span>
         </div>
+
+        {/* Phone row */}
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+          <Phone className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+          <span className="text-sm text-gray-600 font-medium">
+            {maskPhone(agency.phone)}
+          </span>
+        </div>
+
+        {/* View Contact button */}
+        <button
+          type="button"
+          data-ocid={`partners.card.view_contact.${index + 1}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowContactModal(true);
+          }}
+          className="mt-3 w-full py-2 px-4 rounded-xl bg-[#1E40AF] hover:bg-[#1E3A8A] text-white text-sm font-semibold transition-colors duration-200"
+        >
+          View Contact
+        </button>
       </div>
+
+      {/* Contact Modal */}
+      {showContactModal && (
+        <dialog
+          open
+          className="fixed inset-0 bg-transparent z-50 flex items-center justify-center p-4 max-w-none m-0 w-full h-full"
+          data-ocid="partners.contact_modal"
+          onClick={() => setShowContactModal(false)}
+          onKeyDown={(e) => e.key === "Escape" && setShowContactModal(false)}
+        >
+          <div className="absolute inset-0 bg-black/50" />
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Phone className="h-7 w-7 text-blue-700" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Contact Details
+            </h3>
+            <p className="text-gray-600 text-sm mb-6">
+              Register as a travel partner to access full contact details.
+            </p>
+            <a
+              href="/register"
+              className="block w-full py-3 px-6 bg-[#E53935] hover:bg-red-700 text-white font-semibold rounded-xl transition-colors duration-200 mb-3"
+              data-ocid="partners.contact_modal.register_button"
+            >
+              Register as Travel Partner
+            </a>
+            <button
+              type="button"
+              onClick={() => setShowContactModal(false)}
+              className="text-gray-400 hover:text-gray-600 text-sm transition-colors"
+              data-ocid="partners.contact_modal.close_button"
+            >
+              Close
+            </button>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 }
@@ -1809,6 +2073,7 @@ function AgencyCard({ agency, index }: AgencyCardProps) {
 export default function Partners() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCity, setActiveCity] = useState("All Cities");
   const [currentPage, setCurrentPage] = useState(1);
 
   useScrollReveal();
@@ -1821,15 +2086,16 @@ export default function Partners() {
     return agencyData.filter((a) => {
       const matchesCategory =
         activeCategory === "All" || a.category === activeCategory;
+      const matchesCity = activeCity === "All Cities" || a.city === activeCity;
       const q = search.toLowerCase();
       const matchesSearch =
         !q ||
         a.name.toLowerCase().includes(q) ||
         a.city.toLowerCase().includes(q) ||
         a.speciality.toLowerCase().includes(q);
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesCity && matchesSearch;
     });
-  }, [search, activeCategory]);
+  }, [search, activeCategory, activeCity]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
@@ -1842,6 +2108,11 @@ export default function Partners() {
 
   function handleCategoryChange(cat: string) {
     setActiveCategory(cat);
+    setCurrentPage(1);
+  }
+
+  function handleCityChange(city: string) {
+    setActiveCity(city);
     setCurrentPage(1);
   }
 
@@ -1946,12 +2217,12 @@ export default function Partners() {
             />
           </div>
           {/* Category filters */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-3">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 type="button"
-                data-ocid="partners.filter.tab"
+                data-ocid="partners.category_filter.tab"
                 onClick={() => handleCategoryChange(cat)}
                 className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                   activeCategory === cat
@@ -1961,6 +2232,25 @@ export default function Partners() {
                 style={activeCategory === cat ? { background: "#1E40AF" } : {}}
               >
                 {cat}
+              </button>
+            ))}
+          </div>
+          {/* City filters */}
+          <div className="flex flex-wrap gap-2">
+            {CITIES.map((city) => (
+              <button
+                key={city}
+                type="button"
+                data-ocid="partners.city_filter.tab"
+                onClick={() => handleCityChange(city)}
+                className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  activeCity === city
+                    ? "text-white shadow-sm"
+                    : "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                }`}
+                style={activeCity === city ? { background: "#1E40AF" } : {}}
+              >
+                {city}
               </button>
             ))}
           </div>

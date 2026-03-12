@@ -323,3 +323,20 @@
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(38 0.18 264);
 }
+
+/* ── Partner Marquee ── */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.partner-marquee {
+  animation: marquee-scroll 32s linear infinite;
+  width: max-content;
+}
+.partner-marquee:hover {
+  animation-play-state: paused;
+}
