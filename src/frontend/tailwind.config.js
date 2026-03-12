@@ -16,8 +16,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Outfit', 'system-ui', 'sans-serif'],
-        display: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        sans: ["Inter", "Outfit", "system-ui", "sans-serif"],
+        display: ["Poppins", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        body: ["Inter", "system-ui", "sans-serif"],
       },
       colors: {
         border: "oklch(var(--border))",
@@ -28,8 +29,8 @@ export default {
         primary: {
           DEFAULT: "oklch(var(--primary) / <alpha-value>)",
           foreground: "oklch(var(--primary-foreground))",
-          light: "oklch(58 0.2 265)",
-          dark: "oklch(28 0.14 265)",
+          light: "oklch(55 0.18 264)",
+          dark: "oklch(26 0.14 264)",
         },
         secondary: {
           DEFAULT: "oklch(var(--secondary) / <alpha-value>)",
@@ -49,8 +50,8 @@ export default {
         },
         red: {
           DEFAULT: "oklch(var(--red) / <alpha-value>)",
-          light: "oklch(58 0.18 20)",
-          dark: "oklch(38 0.18 30)",
+          light: "oklch(62 0.18 24)",
+          dark: "oklch(38 0.18 28)",
         },
         gold: {
           DEFAULT: "oklch(76 0.155 74)",
@@ -58,12 +59,12 @@ export default {
           dark: "oklch(60 0.14 68)",
         },
         royal: {
-          DEFAULT: "oklch(42 0.20 265)",
-          light: "oklch(58 0.2 265)",
-          dark: "oklch(28 0.14 265)",
-          50: "oklch(97 0.01 240)",
-          100: "oklch(94 0.03 255)",
-          200: "oklch(86 0.07 260)",
+          DEFAULT: "oklch(38 0.18 264)",
+          light: "oklch(55 0.18 264)",
+          dark: "oklch(26 0.14 264)",
+          50: "oklch(98 0.006 240)",
+          100: "oklch(95 0.015 255)",
+          200: "oklch(87 0.05 260)",
         },
         popover: {
           DEFAULT: "oklch(var(--popover))",
@@ -101,12 +102,12 @@ export default {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-        blue: "0 4px 24px oklch(42 0.20 265 / 0.18)",
-        "blue-lg": "0 12px 40px oklch(42 0.20 265 / 0.25)",
+        blue: "0 4px 24px oklch(38 0.18 264 / 0.16)",
+        "blue-lg": "0 12px 40px oklch(38 0.18 264 / 0.22)",
         gold: "0 4px 20px oklch(76 0.155 74 / 0.3)",
-        red: "0 4px 20px oklch(50 0.22 27 / 0.3)",
-        card: "0 2px 16px 0 oklch(18 0.06 265 / 0.08)",
-        "card-hover": "0 8px 32px 0 oklch(18 0.06 265 / 0.14)",
+        red: "0 4px 20px oklch(51 0.22 27 / 0.28)",
+        card: "0 2px 16px 0 oklch(18 0.06 265 / 0.07)",
+        "card-hover": "0 10px 36px 0 oklch(38 0.18 264 / 0.14)",
       },
       keyframes: {
         "accordion-down": {
@@ -118,7 +119,7 @@ export default {
           to: { height: "0" },
         },
         "fade-up": {
-          from: { opacity: "0", transform: "translateY(20px)" },
+          from: { opacity: "0", transform: "translateY(22px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
         "fade-in": {

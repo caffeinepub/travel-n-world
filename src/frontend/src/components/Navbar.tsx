@@ -20,7 +20,7 @@ export default function Navbar() {
   const currentPath = router.state.location.pathname;
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 8);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -34,38 +34,26 @@ export default function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 bg-white transition-all duration-300 ${
         scrolled
-          ? "shadow-[0_2px_20px_rgba(0,0,0,0.08)] border-b border-royal-100"
-          : "shadow-sm border-b border-royal-50"
+          ? "shadow-[0_4px_24px_rgba(30,64,175,0.10)] border-b border-royal-100"
+          : "shadow-[0_1px_4px_rgba(30,64,175,0.05)] border-b border-royal-50"
       }`}
     >
       <div className="container-custom">
-        <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
+        <div className="flex items-center justify-between h-16 md:h-[72px]">
+          {/* ── Logo ── */}
           <Link
             to="/"
-            className="flex items-center gap-3 group"
+            className="flex items-center gap-3 group flex-shrink-0"
             data-ocid="nav.link.1"
           >
-            <div className="flex-shrink-0">
-              <img
-                src="/assets/generated/tnw-logo-transparent.dim_120x120.png"
-                alt="Travel N World Logo"
-                height={36}
-                style={{ height: 36, width: "auto" }}
-                className="object-contain"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-lg leading-tight font-display text-primary">
-                Travel N World
-              </span>
-              <span className="text-xs leading-tight font-semibold text-gold">
-                B2B Travel Platform
-              </span>
-            </div>
+            <img
+              src="/assets/uploads/Screenshot-2026-03-12-155625-1.png"
+              alt="Travel N World"
+              className="h-10 w-auto object-contain"
+            />
           </Link>
 
-          {/* Desktop Nav */}
+          {/* ── Desktop Nav ── */}
           <nav className="hidden lg:flex items-center gap-0.5">
             {navLinks.map((link, i) => (
               <Link
@@ -75,7 +63,7 @@ export default function Navbar() {
                 className={`nav-link px-3.5 py-2 text-sm font-medium rounded-lg transition-colors font-display ${
                   currentPath === link.to
                     ? "text-primary font-semibold active"
-                    : "text-gray-700 hover:text-primary hover:bg-royal-50"
+                    : "text-gray-600 hover:text-primary hover:bg-royal-50"
                 }`}
               >
                 {link.label}
@@ -83,12 +71,12 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* CTA */}
+          {/* ── CTA ── */}
           <div className="hidden lg:flex items-center gap-3">
             <Button
               asChild
-              data-ocid="nav.primary_button"
-              className="red-gradient hover:opacity-90 text-white font-semibold shadow-red border-0 rounded-xl px-6 transition-opacity"
+              data-ocid="nav.join_button"
+              className="red-gradient hover:opacity-90 text-white font-semibold shadow-red border-0 rounded-xl px-6 h-10 transition-all hover:shadow-lg"
             >
               <Link to="/partner">
                 Join Now <ChevronRight className="h-4 w-4 ml-1" />
@@ -96,10 +84,11 @@ export default function Navbar() {
             </Button>
           </div>
 
-          {/* Mobile menu toggle */}
+          {/* ── Mobile toggle ── */}
           <button
             type="button"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
             className="lg:hidden p-2.5 rounded-xl transition-colors text-primary hover:bg-royal-50"
           >
             {mobileOpen ? (
@@ -111,7 +100,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* ── Mobile Menu ── */}
       {mobileOpen && (
         <div className="lg:hidden bg-white border-t border-royal-100 shadow-blue-lg">
           <div className="container-custom py-4 flex flex-col gap-1">
@@ -123,7 +112,7 @@ export default function Navbar() {
                 className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   currentPath === link.to
                     ? "bg-royal-100 text-primary font-semibold"
-                    : "text-gray-700 hover:bg-royal-50 hover:text-primary"
+                    : "text-gray-600 hover:bg-royal-50 hover:text-primary"
                 }`}
               >
                 {link.label}
@@ -132,7 +121,7 @@ export default function Navbar() {
             <div className="pt-3 border-t border-royal-100 mt-2">
               <Button
                 asChild
-                data-ocid="nav.primary_button"
+                data-ocid="nav.join_button"
                 className="w-full red-gradient hover:opacity-90 text-white font-semibold border-0 rounded-xl transition-opacity"
               >
                 <Link to="/partner">Join Now — It's Free</Link>

@@ -15,7 +15,7 @@ export default function Footer() {
   const caffeineUrl = `https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(hostname)}`;
 
   return (
-    <footer style={{ background: "oklch(22 0.08 265)" }} className="text-white">
+    <footer style={{ background: "#0F172A" }} className="text-white">
       {/* Main Footer */}
       <div className="container-custom py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -26,13 +26,15 @@ export default function Footer() {
                 className="p-2 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.1)" }}
               >
-                <Plane className="h-5 w-5 text-gold" />
+                <Plane className="h-5 w-5 text-[#93C5FD]" />
               </div>
               <div>
                 <div className="font-bold text-lg text-white">
                   Travel N World
                 </div>
-                <div className="text-xs text-gold">B2B Travel Platform</div>
+                <div className="text-xs text-[#93C5FD]">
+                  B2B Travel Platform
+                </div>
               </div>
             </div>
             <p
@@ -55,7 +57,7 @@ export default function Footer() {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="p-2.5 rounded-lg transition-colors hover:text-gold"
+                  className="p-2.5 rounded-lg transition-colors hover:text-white"
                   style={{
                     background: "rgba(255,255,255,0.08)",
                     color: "rgba(255,255,255,0.7)",
@@ -84,10 +86,10 @@ export default function Footer() {
                 <li key={link.to}>
                   <Link
                     to={link.to}
-                    className="text-sm transition-colors flex items-center gap-2 hover:text-gold"
+                    className="text-sm transition-colors flex items-center gap-2 hover:text-white"
                     style={{ color: "rgba(255,255,255,0.65)" }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-gold opacity-50" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#93C5FD] opacity-60" />
                     {link.label}
                   </Link>
                 </li>
@@ -112,10 +114,10 @@ export default function Footer() {
                 <li key={s}>
                   <Link
                     to="/services"
-                    className="text-sm transition-colors flex items-center gap-2 hover:text-gold"
+                    className="text-sm transition-colors flex items-center gap-2 hover:text-white"
                     style={{ color: "rgba(255,255,255,0.65)" }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-gold opacity-50" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#93C5FD] opacity-60" />
                     {s}
                   </Link>
                 </li>
@@ -130,7 +132,7 @@ export default function Footer() {
             </h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 text-gold mt-0.5 flex-shrink-0" />
+                <MapPin className="h-4 w-4 text-[#93C5FD] mt-0.5 flex-shrink-0" />
                 <span
                   className="text-sm"
                   style={{ color: "rgba(255,255,255,0.65)" }}
@@ -139,20 +141,20 @@ export default function Footer() {
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-gold flex-shrink-0" />
+                <Phone className="h-4 w-4 text-[#93C5FD] flex-shrink-0" />
                 <a
                   href="tel:+919999999999"
-                  className="text-sm transition-colors hover:text-gold"
+                  className="text-sm transition-colors hover:text-white"
                   style={{ color: "rgba(255,255,255,0.65)" }}
                 >
                   +91 99999 99999
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-gold flex-shrink-0" />
+                <Mail className="h-4 w-4 text-[#93C5FD] flex-shrink-0" />
                 <a
                   href="mailto:info@travelnworld.in"
-                  className="text-sm transition-colors hover:text-gold"
+                  className="text-sm transition-colors hover:text-white"
                   style={{ color: "rgba(255,255,255,0.65)" }}
                 >
                   info@travelnworld.in
@@ -166,7 +168,7 @@ export default function Footer() {
                 borderColor: "rgba(var(--accent), 0.2)",
               }}
             >
-              <p className="text-gold text-xs font-semibold">
+              <p className="text-[#93C5FD] text-xs font-semibold">
                 24/7 Partner Support
               </p>
               <p
@@ -192,7 +194,7 @@ export default function Footer() {
               href={caffeineUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-colors hover:text-gold"
+              className="transition-colors hover:text-white"
               style={{ color: "rgba(var(--accent), 0.7)" }}
             >
               caffeine.ai

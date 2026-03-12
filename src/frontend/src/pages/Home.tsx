@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useSubmitPartnerRegistration,
   useSubscribeNewsletter,
@@ -14,6 +15,7 @@ import {
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Link } from "@tanstack/react-router";
 import {
+  BadgeCheck,
   Building,
   Car,
   CheckCircle2,
@@ -28,44 +30,111 @@ import {
   MapPin,
   Plane,
   ShieldCheck,
+  Sparkles,
   Star,
   Tag,
   Users,
   Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+// ── useCountUp hook ──────────────────────────────────────────────────────────
+function useCountUp(target: number, duration = 1500) {
+  const [count, setCount] = useState(0);
+  const started = useRef(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !started.current) {
+          started.current = true;
+          const start = performance.now();
+          const step = (now: number) => {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - (1 - progress) ** 3;
+            setCount(Math.floor(eased * target));
+            if (progress < 1) requestAnimationFrame(step);
+            else setCount(target);
+          };
+          requestAnimationFrame(step);
+        }
+      },
+      { threshold: 0.4 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [target, duration]);
+
+  return { count, ref };
+}
+
+// ── StatCounter component ────────────────────────────────────────────────────
+function StatCounter({
+  target,
+  suffix,
+  label,
+  ocid,
+}: {
+  target: number;
+  suffix: string;
+  label: string;
+  ocid: string;
+}) {
+  const { count, ref } = useCountUp(target);
+  return (
+    <div ref={ref} data-ocid={ocid} className="text-center">
+      <div className="font-bold text-3xl md:text-4xl text-primary">
+        {count.toLocaleString()}
+        {suffix}
+      </div>
+      <div className="text-muted-foreground text-sm mt-1 font-medium">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+// ── Data ─────────────────────────────────────────────────────────────────────
 const services = [
   {
     icon: Plane,
     title: "Flight Booking",
     desc: "Domestic & international flights with best B2B fares and instant confirmation.",
+    badge: "B2B Only",
   },
   {
     icon: Building,
     title: "Hotel Booking",
     desc: "5000+ hotels worldwide with negotiated rates exclusively for travel agents.",
+    badge: "Wholesale",
   },
   {
     icon: MapPin,
     title: "Domestic Packages",
     desc: "Curated India tour packages covering top 100+ destinations with customization.",
+    badge: "B2B Only",
   },
   {
     icon: Globe,
     title: "International Packages",
     desc: "Ready-to-sell international packages for 50+ countries with full support.",
+    badge: "Wholesale",
   },
   {
     icon: FileText,
     title: "Visa Assistance",
     desc: "Expert visa processing services for 40+ countries with high approval rates.",
+    badge: "B2B Only",
   },
   {
     icon: Car,
     title: "Transport Services",
     desc: "Airport transfers, car rentals, and sightseeing cabs at wholesale rates.",
+    badge: "Wholesale",
   },
 ];
 
@@ -93,7 +162,7 @@ const whyChooseUs = [
   {
     icon: Users,
     title: "Trusted Network",
-    desc: "500+ verified travel agencies in our partner network",
+    desc: "150+ verified travel agencies in our partner network",
   },
 ];
 
@@ -103,42 +172,49 @@ const destinations = [
     country: "UAE",
     img: "/assets/generated/dest-dubai.dim_600x400.jpg",
     tag: "Most Popular",
+    packages: 24,
   },
   {
     name: "Thailand",
     country: "Asia",
     img: "/assets/generated/dest-thailand.dim_600x400.jpg",
     tag: "Best Seller",
+    packages: 18,
   },
   {
     name: "Singapore",
     country: "Asia",
     img: "/assets/generated/dest-singapore.dim_600x400.jpg",
     tag: "Trending",
+    packages: 14,
   },
   {
     name: "Maldives",
     country: "Indian Ocean",
     img: "/assets/generated/dest-maldives.dim_600x400.jpg",
     tag: "Luxury",
+    packages: 12,
   },
   {
     name: "Kashmir",
     country: "India",
     img: "/assets/generated/dest-kashmir.dim_600x400.jpg",
     tag: "Domestic",
+    packages: 20,
   },
   {
     name: "Bali",
     country: "Indonesia",
     img: "/assets/generated/dest-bali.dim_600x400.jpg",
     tag: "Exotic",
+    packages: 16,
   },
   {
     name: "Europe",
     country: "Multi-Country",
     img: "/assets/generated/dest-europe.dim_600x400.jpg",
     tag: "Grand Tour",
+    packages: 30,
   },
 ];
 
@@ -172,6 +248,505 @@ const testimonials = [
   },
 ];
 
+// ── Hero Slider Component ────────────────────────────────────────────────────
+const heroSlides = [
+  {
+    name: "Goa, India",
+    url: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=1200&q=80",
+  },
+  {
+    name: "Dubai, UAE",
+    url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&q=80",
+  },
+  {
+    name: "Maldives",
+    url: "https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=1200&q=80",
+  },
+  {
+    name: "Bali, Indonesia",
+    url: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&q=80",
+  },
+  {
+    name: "Kashmir, India",
+    url: "https://images.unsplash.com/photo-1566837945700-30057527ade0?w=1200&q=80",
+  },
+];
+
+function HeroSection() {
+  const [current, setCurrent] = useState(0);
+  const [inquiryForm, setInquiryForm] = useState({
+    name: "",
+    company: "",
+    mobile: "",
+    email: "",
+    location: "",
+    requirements: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    const t = setInterval(
+      () => setCurrent((p) => (p + 1) % heroSlides.length),
+      4000,
+    );
+    return () => clearInterval(t);
+  }, []);
+
+  const prev = () =>
+    setCurrent((p) => (p - 1 + heroSlides.length) % heroSlides.length);
+  const next = () => setCurrent((p) => (p + 1) % heroSlides.length);
+
+  const handleInquirySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    await new Promise((r) => setTimeout(r, 1000));
+    setSubmitting(false);
+    setSubmitted(true);
+    toast.success(
+      "Inquiry submitted! Our team will contact you within 24 hours.",
+    );
+    setInquiryForm({
+      name: "",
+      company: "",
+      mobile: "",
+      email: "",
+      location: "",
+      requirements: "",
+    });
+    setTimeout(() => setSubmitted(false), 3000);
+  };
+
+  return (
+    <section className="flex flex-col md:flex-row min-h-[600px] md:min-h-[700px] lg:min-h-screen">
+      {/* ── Left: Image Slider ── */}
+      <div
+        data-ocid="hero.slider"
+        className="relative w-full md:w-[60%] min-h-[340px] md:min-h-full overflow-hidden"
+      >
+        {heroSlides.map((slide, i) => (
+          <div
+            key={slide.url}
+            className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+            style={{
+              opacity: i === current ? 1 : 0,
+              zIndex: i === current ? 1 : 0,
+            }}
+          >
+            <img
+              src={slide.url}
+              alt={slide.name}
+              className="w-full h-full object-cover"
+              loading={i === 0 ? "eager" : "lazy"}
+            />
+          </div>
+        ))}
+
+        {/* Dark gradient overlay */}
+        <div
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
+          }}
+        />
+
+        {/* Hero text overlay — bottom left */}
+        <div className="absolute bottom-0 left-0 z-20 p-6 md:p-10 lg:p-12 max-w-[90%]">
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mb-4"
+            style={{
+              background: "rgba(255,255,255,0.12)",
+              borderColor: "rgba(255,255,255,0.25)",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <span
+              className="w-2 h-2 rounded-full animate-pulse"
+              style={{ background: "#E53935" }}
+            />
+            <span
+              className="text-xs font-bold uppercase tracking-widest"
+              style={{ color: "rgba(255,255,255,0.95)" }}
+            >
+              India's #1 B2B Travel Platform
+            </span>
+          </div>
+          <h1
+            className="font-bold text-3xl md:text-4xl lg:text-5xl text-white mb-3 leading-tight"
+            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800 }}
+          >
+            Explore the World with
+            <br />
+            <span style={{ color: "#ffffff" }}>Travel N World</span>
+          </h1>
+          <p
+            className="text-base md:text-lg"
+            style={{ color: "#E5E7EB", fontFamily: "'Inter', sans-serif" }}
+          >
+            Premium travel solutions for travel agents and partners across
+            India.
+          </p>
+        </div>
+
+        {/* Destination pill — bottom right */}
+        <div className="absolute bottom-6 right-6 z-20">
+          <div
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-semibold"
+            style={{
+              background: "rgba(0,0,0,0.55)",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            <MapPin className="h-3 w-3" />
+            {heroSlides[current].name}
+          </div>
+        </div>
+
+        {/* Arrow navigation */}
+        <button
+          type="button"
+          data-ocid="hero.prev_button"
+          onClick={prev}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+          style={{
+            background: "rgba(0,0,0,0.4)",
+            border: "1px solid rgba(255,255,255,0.25)",
+          }}
+          aria-label="Previous slide"
+        >
+          <ChevronLeft className="h-5 w-5 text-white" />
+        </button>
+        <button
+          type="button"
+          data-ocid="hero.next_button"
+          onClick={next}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+          style={{
+            background: "rgba(0,0,0,0.4)",
+            border: "1px solid rgba(255,255,255,0.25)",
+          }}
+          aria-label="Next slide"
+        >
+          <ChevronRight className="h-5 w-5 text-white" />
+        </button>
+
+        {/* Dot indicators */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+          {heroSlides.map((slide, i) => (
+            <button
+              key={slide.name}
+              type="button"
+              onClick={() => setCurrent(i)}
+              className="transition-all duration-300 rounded-full"
+              style={{
+                width: i === current ? 20 : 8,
+                height: 8,
+                background:
+                  i === current ? "#ffffff" : "rgba(255,255,255,0.45)",
+              }}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ── Right: Inquiry Form ── */}
+      <div
+        className="w-full md:w-[40%] flex items-center justify-center p-6 md:p-8 lg:p-10"
+        style={{ background: "#F5F7FA" }}
+      >
+        <div
+          className="w-full max-w-md bg-white rounded-2xl p-6 md:p-8"
+          style={{ boxShadow: "0 8px 40px rgba(30,64,175,0.13)" }}
+        >
+          {/* Card header */}
+          <div className="mb-6">
+            <h2
+              className="font-bold text-xl"
+              style={{ color: "#111827", fontFamily: "'Poppins', sans-serif" }}
+            >
+              Get a Free Quote
+            </h2>
+            <p
+              className="text-sm mt-1"
+              style={{ color: "#6B7280", fontFamily: "'Inter', sans-serif" }}
+            >
+              Fill in the details and we'll get back to you
+            </p>
+            <div
+              className="w-12 h-1 rounded mt-2"
+              style={{ background: "#E53935" }}
+            />
+          </div>
+
+          {submitted ? (
+            <div
+              data-ocid="inquiry.success_state"
+              className="flex flex-col items-center justify-center py-10 gap-3"
+            >
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center"
+                style={{ background: "oklch(38 0.18 264 / 0.1)" }}
+              >
+                <CheckCircle2 className="h-7 w-7 text-primary" />
+              </div>
+              <p
+                className="font-semibold text-center"
+                style={{ color: "#111827" }}
+              >
+                Inquiry Submitted!
+              </p>
+              <p className="text-sm text-center" style={{ color: "#6B7280" }}>
+                Our team will contact you within 24 hours.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleInquirySubmit} className="space-y-3">
+              {/* Name */}
+              <div>
+                <label
+                  htmlFor="inq-name"
+                  className="block text-xs font-semibold mb-1"
+                  style={{ color: "#374151" }}
+                >
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  id="inq-name"
+                  data-ocid="inquiry.name_input"
+                  value={inquiryForm.name}
+                  onChange={(e) =>
+                    setInquiryForm((p) => ({ ...p, name: e.target.value }))
+                  }
+                  placeholder="Your full name"
+                  className="w-full h-10 px-3 rounded-lg border text-sm outline-none transition-all focus:ring-2"
+                  style={{
+                    borderColor: "#D1D5DB",
+                    fontFamily: "'Inter', sans-serif",
+                    color: "#111827",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#1E40AF";
+                    e.target.style.boxShadow = "0 0 0 2px rgba(30,64,175,0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#D1D5DB";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+              {/* Company Name */}
+              <div>
+                <label
+                  htmlFor="inq-company"
+                  className="block text-xs font-semibold mb-1"
+                  style={{ color: "#374151" }}
+                >
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  id="inq-company"
+                  data-ocid="inquiry.company_input"
+                  value={inquiryForm.company}
+                  onChange={(e) =>
+                    setInquiryForm((p) => ({ ...p, company: e.target.value }))
+                  }
+                  placeholder="Your agency / company"
+                  className="w-full h-10 px-3 rounded-lg border text-sm outline-none transition-all"
+                  style={{
+                    borderColor: "#D1D5DB",
+                    fontFamily: "'Inter', sans-serif",
+                    color: "#111827",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#1E40AF";
+                    e.target.style.boxShadow = "0 0 0 2px rgba(30,64,175,0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#D1D5DB";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+              {/* Mobile */}
+              <div>
+                <label
+                  htmlFor="inq-mobile"
+                  className="block text-xs font-semibold mb-1"
+                  style={{ color: "#374151" }}
+                >
+                  Mobile Number *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  id="inq-mobile"
+                  data-ocid="inquiry.mobile_input"
+                  value={inquiryForm.mobile}
+                  onChange={(e) =>
+                    setInquiryForm((p) => ({ ...p, mobile: e.target.value }))
+                  }
+                  placeholder="+91 XXXXX XXXXX"
+                  className="w-full h-10 px-3 rounded-lg border text-sm outline-none transition-all"
+                  style={{
+                    borderColor: "#D1D5DB",
+                    fontFamily: "'Inter', sans-serif",
+                    color: "#111827",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#1E40AF";
+                    e.target.style.boxShadow = "0 0 0 2px rgba(30,64,175,0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#D1D5DB";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="inq-email"
+                  className="block text-xs font-semibold mb-1"
+                  style={{ color: "#374151" }}
+                >
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  required
+                  id="inq-email"
+                  data-ocid="inquiry.email_input"
+                  value={inquiryForm.email}
+                  onChange={(e) =>
+                    setInquiryForm((p) => ({ ...p, email: e.target.value }))
+                  }
+                  placeholder="you@company.com"
+                  className="w-full h-10 px-3 rounded-lg border text-sm outline-none transition-all"
+                  style={{
+                    borderColor: "#D1D5DB",
+                    fontFamily: "'Inter', sans-serif",
+                    color: "#111827",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#1E40AF";
+                    e.target.style.boxShadow = "0 0 0 2px rgba(30,64,175,0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#D1D5DB";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+              {/* Location */}
+              <div>
+                <label
+                  htmlFor="inq-location"
+                  className="block text-xs font-semibold mb-1"
+                  style={{ color: "#374151" }}
+                >
+                  Location
+                </label>
+                <input
+                  type="text"
+                  id="inq-location"
+                  data-ocid="inquiry.location_input"
+                  value={inquiryForm.location}
+                  onChange={(e) =>
+                    setInquiryForm((p) => ({ ...p, location: e.target.value }))
+                  }
+                  placeholder="Your City / State"
+                  className="w-full h-10 px-3 rounded-lg border text-sm outline-none transition-all"
+                  style={{
+                    borderColor: "#D1D5DB",
+                    fontFamily: "'Inter', sans-serif",
+                    color: "#111827",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#1E40AF";
+                    e.target.style.boxShadow = "0 0 0 2px rgba(30,64,175,0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#D1D5DB";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+              {/* Travel Requirements */}
+              <div>
+                <label
+                  htmlFor="inq-requirements"
+                  className="block text-xs font-semibold mb-1"
+                  style={{ color: "#374151" }}
+                >
+                  Travel Requirements
+                </label>
+                <textarea
+                  rows={3}
+                  id="inq-requirements"
+                  data-ocid="inquiry.requirements_textarea"
+                  value={inquiryForm.requirements}
+                  onChange={(e) =>
+                    setInquiryForm((p) => ({
+                      ...p,
+                      requirements: e.target.value,
+                    }))
+                  }
+                  placeholder="Destination, dates, group size..."
+                  className="w-full px-3 py-2 rounded-lg border text-sm outline-none transition-all resize-none"
+                  style={{
+                    borderColor: "#D1D5DB",
+                    fontFamily: "'Inter', sans-serif",
+                    color: "#111827",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#1E40AF";
+                    e.target.style.boxShadow = "0 0 0 2px rgba(30,64,175,0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = "#D1D5DB";
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                data-ocid="inquiry.submit_button"
+                disabled={submitting}
+                className="w-full h-12 rounded-xl text-white font-semibold text-base transition-all hover:brightness-90 disabled:opacity-60 flex items-center justify-center gap-2"
+                style={{
+                  background: "#1E40AF",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Submitting...
+                  </>
+                ) : (
+                  "Submit Inquiry →"
+                )}
+              </button>
+              <p
+                className="text-xs text-center mt-1"
+                style={{ color: "#6B7280" }}
+              >
+                Our team will contact you within 24 hours
+              </p>
+            </form>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function Home() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -238,124 +813,88 @@ export default function Home() {
 
   return (
     <div>
-      {/* HERO */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <img
-          src="/assets/generated/hero-travel.dim_1920x1080.jpg"
-          alt="World travel destinations"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="hero-overlay absolute inset-0" />
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* HERO — Split Layout: Slider Left + Inquiry Form Right */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <HeroSection />
 
-        <div className="container-custom relative z-10 text-center py-32">
-          <div
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full border mb-8 animate-fade-in"
-            style={{
-              background: "rgba(255,255,255,0.1)",
-              borderColor: "rgba(255,255,255,0.2)",
-            }}
-          >
-            <span className="w-2 h-2 bg-gold rounded-full animate-pulse" />
-            <span
-              className="text-sm font-medium"
-              style={{ color: "rgba(255,255,255,0.9)" }}
-            >
-              Trusted by 500+ Travel Agents Across India
-            </span>
-          </div>
-
-          <h1
-            className="font-bold text-4xl md:text-6xl lg:text-7xl text-white mb-6 animate-fade-up"
-            style={{ textWrap: "balance" }}
-          >
-            India's Trusted
-            <br />
-            <span className="gradient-text">B2B Travel Platform</span>
-          </h1>
-
-          <p
-            className="text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-fade-up"
-            style={{ color: "rgba(255,255,255,0.8)", animationDelay: "0.2s" }}
-          >
-            Your gateway to seamless travel solutions for agents across India.
-            Best rates. Instant booking. Unbeatable support.
-          </p>
-
-          <div
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up"
-            style={{ animationDelay: "0.35s" }}
-          >
-            <Button
-              asChild
-              size="lg"
-              data-ocid="hero.primary_button"
-              className="bg-primary hover:bg-primary-light text-white font-semibold h-14 px-8 rounded-2xl text-base shadow-blue-lg border-0 transition-all hover:scale-105"
-            >
-              <Link to="/partner">Join Now — It's Free</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              data-ocid="hero.secondary_button"
-              className="red-gradient border-0 text-white font-semibold h-14 px-8 rounded-2xl text-base transition-all hover:opacity-90 shadow-red"
-            >
-              <Link to="/partner">Become a Partner</Link>
-            </Button>
-          </div>
-
-          {/* Stats */}
-          <div
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 max-w-3xl mx-auto animate-fade-up"
-            style={{ animationDelay: "0.5s" }}
-          >
-            {[
-              { num: "500+", label: "Travel Partners" },
-              { num: "50+", label: "Destinations" },
-              { num: "10K+", label: "Bookings Done" },
-              { num: "5 Yrs", label: "Experience" },
-            ].map((s) => (
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* TRUST STATISTICS BAR */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section
+        className="py-10 bg-white"
+        style={{
+          borderTop: "1px solid oklch(92 0.01 240)",
+          borderBottom: "1px solid oklch(92 0.01 240)",
+          boxShadow: "0 2px 20px oklch(38 0.18 264 / 0.06)",
+        }}
+      >
+        <div className="container-custom">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-0 divide-y sm:divide-y-0 sm:divide-x divide-border">
+            {/* Stat 1 */}
+            <div className="flex flex-1 items-center justify-center gap-4 px-6 py-2">
               <div
-                key={s.label}
-                className="rounded-2xl py-4 px-2 border"
-                style={{
-                  background: "rgba(255,255,255,0.1)",
-                  borderColor: "rgba(255,255,255,0.15)",
-                }}
+                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "oklch(38 0.18 264 / 0.1)" }}
               >
-                <div className="font-bold text-2xl text-gold">{s.num}</div>
-                <div
-                  className="text-xs mt-1"
-                  style={{ color: "rgba(255,255,255,0.75)" }}
-                >
-                  {s.label}
-                </div>
+                <ShieldCheck className="h-6 w-6 text-primary" />
               </div>
-            ))}
-          </div>
-        </div>
+              <StatCounter
+                target={150}
+                suffix="+"
+                label="Verified Travel Partners"
+                ocid="hero.stats.partners"
+              />
+            </div>
 
-        <div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce"
-          style={{ color: "rgba(255,255,255,0.5)" }}
-        >
-          <ChevronDown className="h-6 w-6" />
+            {/* Stat 2 */}
+            <div className="flex flex-1 items-center justify-center gap-4 px-6 py-2">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "oklch(51 0.22 27 / 0.08)" }}
+              >
+                <BadgeCheck
+                  className="h-6 w-6"
+                  style={{ color: "oklch(51 0.22 27)" }}
+                />
+              </div>
+              <StatCounter
+                target={10000}
+                suffix="+"
+                label="Successful Bookings"
+                ocid="hero.stats.bookings"
+              />
+            </div>
+
+            {/* Stat 3 */}
+            <div className="flex flex-1 items-center justify-center gap-4 px-6 py-2">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "oklch(76 0.155 74 / 0.12)" }}
+              >
+                <Globe
+                  className="h-6 w-6"
+                  style={{ color: "oklch(60 0.14 68)" }}
+                />
+              </div>
+              <StatCounter
+                target={50}
+                suffix="+"
+                label="Global Destinations"
+                ocid="hero.stats.destinations"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* SERVICES */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section id="services" className="section-padding bg-white">
         <div className="container-custom">
           <div className="text-center mb-14 reveal">
-            <span
-              className="inline-block px-4 py-1.5 rounded-full text-sm font-semibold mb-4"
-              style={{
-                background: "oklch(50 0.22 27 / 0.08)",
-                color: "oklch(50 0.22 27)",
-              }}
-            >
-              What We Offer
-            </span>
+            <span className="section-label-red">What We Offer</span>
             <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-foreground gold-line gold-line-center">
               Our Services
             </h2>
@@ -370,18 +909,52 @@ export default function Home() {
               <div
                 key={service.title}
                 data-ocid={`services.card.${i + 1}`}
-                className={`card-hover reveal reveal-delay-${(i % 3) + 1} bg-white rounded-2xl p-7 border border-border shadow-card group`}
+                className={`reveal reveal-delay-${(i % 3) + 1} group relative bg-white rounded-2xl p-7 border border-border shadow-card transition-all duration-300 overflow-hidden`}
+                style={{
+                  boxShadow: "0 2px 16px oklch(18 0.06 265 / 0.07)",
+                }}
               >
-                <div className="w-14 h-14 bg-royal-100 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-primary transition-colors">
-                  <service.icon className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
+                {/* Left blue border that appears on hover */}
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl transition-all duration-300"
+                  style={{
+                    background: "oklch(38 0.18 264)",
+                    transform: "scaleY(0)",
+                    transformOrigin: "top",
+                  }}
+                  aria-hidden="true"
+                />
+                <style>{`
+                  [data-ocid="services.card.${i + 1}"]:hover > div:first-child {
+                    transform: scaleY(1);
+                  }
+                  [data-ocid="services.card.${i + 1}"]:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 12px 40px oklch(38 0.18 264 / 0.14);
+                  }
+                `}</style>
+
+                <div className="flex items-start justify-between mb-5">
+                  <div className="w-14 h-14 blue-gradient rounded-2xl flex items-center justify-center shadow-blue">
+                    <service.icon className="h-6 w-6 text-white" />
+                  </div>
+                  <span
+                    className="text-xs font-bold px-2.5 py-1 rounded-full"
+                    style={{
+                      background: "oklch(51 0.22 27 / 0.1)",
+                      color: "oklch(51 0.22 27)",
+                    }}
+                  >
+                    {service.badge}
+                  </span>
                 </div>
-                <h3 className="font-semibold text-xl text-foreground mb-3">
+                <h3 className="font-semibold text-xl text-foreground mb-3 group-hover:text-primary transition-colors">
                   {service.title}
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {service.desc}
                 </p>
-                <div className="mt-4 flex items-center gap-1.5 text-primary text-sm font-medium">
+                <div className="mt-4 flex items-center gap-1.5 text-primary text-sm font-semibold">
                   <span>Learn more</span>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </div>
@@ -391,13 +964,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* WHY CHOOSE US */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="section-padding bg-royal-50">
         <div className="container-custom">
           <div className="text-center mb-14 reveal">
-            <span className="inline-block px-4 py-1.5 bg-royal-100 text-primary rounded-full text-sm font-semibold mb-4">
-              Our Advantage
-            </span>
+            <span className="section-label">Our Advantage</span>
             <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-foreground gold-line gold-line-center">
               Why Choose Us
             </h2>
@@ -408,7 +981,7 @@ export default function Home() {
                 key={item.title}
                 className={`reveal reveal-delay-${i + 1} text-center p-6 bg-white rounded-2xl border border-border shadow-card card-hover`}
               >
-                <div className="w-16 h-16 blue-gradient rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 blue-gradient rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-blue">
                   <item.icon className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="font-semibold text-base text-foreground mb-2">
@@ -423,19 +996,81 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* HOW IT WORKS */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="section-padding bg-[#F5F7FA]">
+        <div className="container-custom">
+          <div className="text-center mb-14 reveal">
+            <span className="section-label">Simple Process</span>
+            <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-[#111827] red-line red-line-center">
+              How It Works
+            </h2>
+            <p className="text-[#6B7280] mt-5 max-w-xl mx-auto">
+              Get started in 4 simple steps and grow your travel business with
+              us
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+            {[
+              {
+                num: "01",
+                title: "Register",
+                desc: "Create your free partner account with basic business details",
+              },
+              {
+                num: "02",
+                title: "Get Access",
+                desc: "Browse exclusive B2B travel deals, rates, and inventory",
+              },
+              {
+                num: "03",
+                title: "Book",
+                desc: "Place bookings for your clients with instant confirmation",
+              },
+              {
+                num: "04",
+                title: "Earn",
+                desc: "Get competitive commissions on every successful booking",
+              },
+            ].map((step, i) => (
+              <div
+                key={step.title}
+                className={`reveal reveal-delay-${i + 1} relative`}
+              >
+                <div className="bg-white rounded-2xl p-7 border border-border shadow-card text-center card-hover">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 text-white font-bold text-xl"
+                    style={{ background: "#1E40AF" }}
+                  >
+                    {step.num}
+                  </div>
+                  <h3 className="font-semibold text-lg text-[#111827] mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-[#6B7280] text-sm leading-relaxed">
+                    {step.desc}
+                  </p>
+                </div>
+                {i < 3 && (
+                  <div className="hidden lg:flex absolute top-1/2 -translate-y-1/2 -right-4 z-10 items-center justify-center">
+                    <span className="text-2xl font-bold text-[#6B7280]">→</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* DESTINATIONS */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="section-padding bg-white">
         <div className="container-custom">
           <div className="text-center mb-14 reveal">
-            <span
-              className="inline-block px-4 py-1.5 rounded-full text-sm font-semibold mb-4"
-              style={{
-                background: "oklch(50 0.22 27 / 0.08)",
-                color: "oklch(50 0.22 27)",
-              }}
-            >
-              Explore the World
-            </span>
+            <span className="section-label-red">Explore the World</span>
             <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-foreground gold-line gold-line-center">
               Popular Destinations
             </h2>
@@ -462,23 +1097,63 @@ export default function Home() {
                   className="absolute inset-0"
                   style={{
                     background:
-                      "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)",
+                      "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 55%, transparent 100%)",
                   }}
                 />
+                {/* Tag badge */}
                 <div className="absolute top-3 left-3">
-                  <span className="px-2.5 py-1 text-white text-xs font-semibold rounded-full bg-gold">
+                  <span className="px-2.5 py-1 text-white text-xs font-bold rounded-full bg-[#1E40AF]">
                     {dest.tag}
                   </span>
                 </div>
+                {/* Package count */}
+                <div className="absolute top-3 right-3">
+                  <span
+                    className="px-2.5 py-1 text-white text-xs font-semibold rounded-full"
+                    style={{
+                      background: "rgba(0,0,0,0.45)",
+                      backdropFilter: "blur(4px)",
+                    }}
+                  >
+                    {dest.packages} Packages
+                  </span>
+                </div>
+                {/* Bottom content */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <div className="font-bold text-xl text-white">
+                  <div className="font-bold text-2xl text-white">
                     {dest.name}
                   </div>
                   <div
-                    className="text-xs mt-0.5"
-                    style={{ color: "rgba(255,255,255,0.7)" }}
+                    className="text-sm mt-0.5"
+                    style={{ color: "rgba(255,255,255,0.72)" }}
                   >
                     {dest.country}
+                  </div>
+                  {/* Book Now — slides up on hover */}
+                  <div
+                    className="overflow-hidden"
+                    style={{ maxHeight: 0, transition: "max-height 0.3s ease" }}
+                    ref={(el) => {
+                      if (!el) return;
+                      const parent = el.closest(".dest-card");
+                      if (!parent) return;
+                      const show = () => {
+                        el.style.maxHeight = "48px";
+                      };
+                      const hide = () => {
+                        el.style.maxHeight = "0px";
+                      };
+                      parent.addEventListener("mouseenter", show);
+                      parent.addEventListener("mouseleave", hide);
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="mt-3 w-full text-center text-sm font-bold py-2 rounded-xl text-white"
+                      style={{ background: "oklch(38 0.18 264 / 0.85)" }}
+                    >
+                      Book Now →
+                    </button>
                   </div>
                 </div>
               </div>
@@ -490,7 +1165,7 @@ export default function Home() {
               asChild
               variant="outline"
               size="lg"
-              className="border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-2xl px-8 font-semibold"
+              className="border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-2xl px-8 font-semibold transition-all"
             >
               <Link to="/destinations">View All Destinations</Link>
             </Button>
@@ -498,13 +1173,171 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* PRICING / PLANS */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="section-padding bg-[#F5F7FA]">
+        <div className="container-custom">
+          <div className="text-center mb-14 reveal">
+            <span className="section-label-red">Membership Plans</span>
+            <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-[#111827] red-line red-line-center">
+              Become a Travel Partner
+            </h2>
+            <p className="text-[#6B7280] mt-5 max-w-xl mx-auto">
+              Choose the plan that's right for your business and start growing
+              today
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Starter */}
+            <div className="reveal reveal-delay-1 bg-white rounded-2xl shadow-md p-8 border border-border flex flex-col card-hover">
+              <div className="mb-6">
+                <h3 className="font-bold text-xl text-[#111827] mb-1">
+                  Starter Plan
+                </h3>
+                <p className="text-[#6B7280] text-sm">Perfect for new agents</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-[#1E40AF]">
+                  ₹3,000
+                </span>
+                <span className="text-[#6B7280] text-sm ml-2">/ 3 Months</span>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1">
+                {[
+                  "Verified listing",
+                  "Lead inquiries",
+                  "Access to travel deals",
+                  "Partner support",
+                ].map((f) => (
+                  <li
+                    key={f}
+                    className="flex items-center gap-3 text-sm text-[#374151]"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-[#1E40AF] font-bold text-xs">
+                      ✓
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                asChild
+                data-ocid="pricing.starter.button"
+                className="w-full bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-semibold rounded-xl border-0 h-12"
+              >
+                <Link to="/partner">Join Now</Link>
+              </Button>
+            </div>
+
+            {/* Professional */}
+            <div className="reveal reveal-delay-2 bg-white rounded-2xl shadow-md p-8 border border-border flex flex-col card-hover">
+              <div className="mb-6">
+                <h3 className="font-bold text-xl text-[#111827] mb-1">
+                  Professional Plan
+                </h3>
+                <p className="text-[#6B7280] text-sm">For growing agencies</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-[#1E40AF]">
+                  ₹6,000
+                </span>
+                <span className="text-[#6B7280] text-sm ml-2">/ 6 Months</span>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1">
+                {[
+                  "Verified listing",
+                  "Priority leads",
+                  "Marketing support",
+                  "Partner dashboard",
+                ].map((f) => (
+                  <li
+                    key={f}
+                    className="flex items-center gap-3 text-sm text-[#374151]"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-[#1E40AF] font-bold text-xs">
+                      ✓
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                asChild
+                data-ocid="pricing.professional.button"
+                className="w-full bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-semibold rounded-xl border-0 h-12"
+              >
+                <Link to="/partner">Join Now</Link>
+              </Button>
+            </div>
+
+            {/* Premium — Recommended */}
+            <div className="reveal reveal-delay-3 bg-white rounded-2xl shadow-xl p-8 border-2 border-[#1E40AF] flex flex-col relative card-hover">
+              <div
+                className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full text-white text-xs font-bold uppercase tracking-widest"
+                style={{ background: "#1E40AF" }}
+              >
+                ⭐ Recommended
+              </div>
+              <div className="mb-6 mt-2">
+                <h3 className="font-bold text-xl text-[#111827] mb-1">
+                  Premium Plan
+                </h3>
+                <p className="text-[#6B7280] text-sm">
+                  For established agencies
+                </p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-[#1E40AF]">
+                  ₹12,000
+                </span>
+                <span className="text-[#6B7280] text-sm ml-2">/ 1 Year</span>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1">
+                {[
+                  "Verified listing",
+                  "Featured partner badge",
+                  "Top search visibility",
+                  "Priority leads",
+                  "Dedicated support",
+                ].map((f) => (
+                  <li
+                    key={f}
+                    className="flex items-center gap-3 text-sm text-[#374151]"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-[#1E40AF] font-bold text-xs">
+                      ✓
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                asChild
+                data-ocid="pricing.premium.button"
+                className="w-full bg-[#E53935] hover:bg-[#C62828] text-white font-semibold rounded-xl border-0 h-12"
+              >
+                <Link to="/partner">Join Now</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* TESTIMONIALS — desktop grid + mobile slider */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="section-padding blue-gradient">
         <div className="container-custom">
           <div className="text-center mb-14 reveal">
             <span
-              className="inline-block px-4 py-1.5 rounded-full text-sm font-semibold mb-4"
-              style={{ background: "rgba(255,255,255,0.15)", color: "white" }}
+              className="inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4"
+              style={{
+                background: "rgba(255,255,255,0.15)",
+                color: "white",
+                letterSpacing: "0.12em",
+              }}
             >
               Partner Stories
             </span>
@@ -513,12 +1346,69 @@ export default function Home() {
             </h2>
           </div>
 
+          {/* Desktop: 3-column grid */}
+          <div className="hidden lg:grid grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
+              <div
+                key={t.name}
+                data-ocid={`testimonials.grid.card.${i + 1}`}
+                className="reveal"
+                style={{ transitionDelay: `${i * 0.1}s` }}
+              >
+                <div
+                  className="rounded-3xl p-8 h-full flex flex-col border"
+                  style={{
+                    background: "rgba(255,255,255,0.1)",
+                    borderColor: "rgba(255,255,255,0.18)",
+                    backdropFilter: "blur(12px)",
+                  }}
+                >
+                  <div className="flex items-center gap-1 mb-5">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star
+                        key={n}
+                        className="h-4 w-4 fill-[#C9A227] text-[#C9A227]"
+                      />
+                    ))}
+                  </div>
+                  <blockquote className="text-white text-sm md:text-base leading-relaxed italic flex-1 mb-6">
+                    "{t.quote}"
+                  </blockquote>
+                  <div className="flex items-center gap-3 mt-auto">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-sm flex-shrink-0"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, oklch(55 0.18 264), oklch(38 0.18 264))",
+                        border: "2px solid rgba(255,255,255,0.25)",
+                      }}
+                    >
+                      {t.initials}
+                    </div>
+                    <div>
+                      <div className="font-bold text-white text-sm">
+                        {t.name}
+                      </div>
+                      <div
+                        className="text-xs"
+                        style={{ color: "rgba(255,255,255,0.65)" }}
+                      >
+                        {t.role} · {t.city}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile: slider */}
           <div
             data-ocid="testimonials.panel"
-            className="max-w-3xl mx-auto reveal"
+            className="lg:hidden max-w-2xl mx-auto reveal"
           >
             <div
-              className="relative rounded-3xl p-8 md:p-10 border text-center"
+              className="relative rounded-3xl p-8 border text-center"
               style={{
                 background: "rgba(255,255,255,0.1)",
                 borderColor: "rgba(255,255,255,0.2)",
@@ -528,16 +1418,26 @@ export default function Home() {
                 {[1, 2, 3, 4, 5]
                   .slice(0, testimonials[currentTestimonial].rating)
                   .map((n) => (
-                    <Star key={n} className="h-5 w-5 fill-gold text-gold" />
+                    <Star
+                      key={n}
+                      className="h-5 w-5 fill-[#C9A227] text-[#C9A227]"
+                    />
                   ))}
               </div>
 
-              <blockquote className="text-white text-lg md:text-xl leading-relaxed mb-8 italic">
-                “{testimonials[currentTestimonial].quote}”
+              <blockquote className="text-white text-lg leading-relaxed mb-8 italic">
+                "{testimonials[currentTestimonial].quote}"
               </blockquote>
 
               <div className="flex items-center justify-center gap-3">
-                <div className="w-12 h-12 blue-gradient rounded-full flex items-center justify-center font-bold text-white text-sm border-2 border-white/20">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-sm"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(55 0.18 264), oklch(38 0.18 264))",
+                    border: "2px solid rgba(255,255,255,0.2)",
+                  }}
+                >
                   {testimonials[currentTestimonial].initials}
                 </div>
                 <div className="text-left">
@@ -560,11 +1460,7 @@ export default function Home() {
                     type="button"
                     key={t.name}
                     onClick={() => setCurrentTestimonial(i)}
-                    className={`rounded-full transition-all ${
-                      i === currentTestimonial
-                        ? "w-8 h-2.5 bg-gold"
-                        : "w-2.5 h-2.5 hover:opacity-70"
-                    }`}
+                    className={`rounded-full transition-all ${i === currentTestimonial ? "w-8 h-2.5 bg-[#1E40AF]" : "w-2.5 h-2.5 hover:opacity-70"}`}
                     style={
                       i !== currentTestimonial
                         ? { background: "rgba(255,255,255,0.3)" }
@@ -606,25 +1502,113 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PARTNER REGISTRATION */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* PARTNER REGISTRATION CTA BANNER */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="section-padding bg-royal-50">
+        <div className="container-custom">
+          <div
+            className="relative rounded-3xl p-10 md:p-16 overflow-hidden"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(38 0.18 264) 0%, oklch(28 0.16 268) 100%)",
+            }}
+          >
+            {/* Decorative blobs */}
+            <div
+              className="absolute -top-16 -right-16 w-64 h-64 rounded-full"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+            />
+            <div
+              className="absolute -bottom-16 -left-16 w-80 h-80 rounded-full"
+              style={{ background: "oklch(51 0.22 27 / 0.12)" }}
+            />
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full"
+              style={{ background: "rgba(255,255,255,0.02)" }}
+            />
+
+            <div className="relative z-10 text-center">
+              <div
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6"
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  color: "white",
+                  letterSpacing: "0.12em",
+                }}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Partner With Us
+              </div>
+
+              <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-white mb-4">
+                Join India's Fastest Growing
+                <br />
+                <span style={{ color: "rgba(255,255,255,0.9)" }}>
+                  B2B Travel Network
+                </span>
+              </h2>
+
+              <p
+                className="text-lg max-w-xl mx-auto mb-8"
+                style={{ color: "rgba(255,255,255,0.8)" }}
+              >
+                Get exclusive rates, dedicated support, and real-time booking
+                tools. Start growing your travel business today.
+              </p>
+
+              {/* Benefit pills */}
+              <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+                {[
+                  "✓ No Joining Fee",
+                  "⚡ Instant Activation",
+                  "🎧 24/7 Support",
+                ].map((pill) => (
+                  <span
+                    key={pill}
+                    className="px-4 py-2 rounded-full text-sm font-semibold"
+                    style={{
+                      background: "rgba(255,255,255,0.15)",
+                      color: "white",
+                      border: "1px solid rgba(255,255,255,0.25)",
+                    }}
+                  >
+                    {pill}
+                  </span>
+                ))}
+              </div>
+
+              <Button
+                asChild
+                size="lg"
+                data-ocid="cta_banner.primary_button"
+                className="h-14 px-10 rounded-2xl border-0 font-bold text-base transition-all hover:scale-105"
+                style={{
+                  background: "#E53935",
+                  color: "white",
+                  boxShadow: "0 8px 32px rgba(229,57,53,0.4)",
+                }}
+              >
+                <a href="#register">Register Now — It's Free →</a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* PARTNER REGISTRATION FORM */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section id="register" className="section-padding bg-white">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="reveal">
-              <span
-                className="inline-block px-4 py-1.5 rounded-full text-sm font-semibold mb-5"
-                style={{
-                  background: "oklch(50 0.22 27 / 0.08)",
-                  color: "oklch(50 0.22 27)",
-                }}
-              >
-                Join Our Network
-              </span>
+              <span className="section-label-red">Join Our Network</span>
               <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-foreground mb-5 gold-line">
                 Register as a Partner
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-8">
-                Join 500+ travel agents who are already growing their business
+                Join 150+ travel agents who are already growing their business
                 with Travel N World. Get instant access to exclusive B2B rates,
                 real-time inventory, and dedicated support.
               </p>
@@ -812,19 +1796,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* VERIFIED PARTNERS TEASER */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="section-padding bg-white">
         <div className="container-custom">
           <div className="text-center mb-14 reveal">
-            <span
-              className="inline-block px-4 py-1.5 rounded-full text-sm font-semibold mb-4"
-              style={{
-                background: "oklch(50 0.22 27 / 0.08)",
-                color: "oklch(50 0.22 27)",
-              }}
-            >
-              Our Network
-            </span>
+            <span className="section-label-red">Our Network</span>
             <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-foreground gold-line gold-line-center">
               Verified Travel Partners
             </h2>
@@ -885,12 +1863,12 @@ export default function Home() {
                 className="group partner-card-hover reveal bg-white rounded-2xl border border-border shadow-sm p-6 cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 blue-gradient rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
+                  <div className="w-12 h-12 blue-gradient rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-blue">
                     {agency.name.charAt(0)}
                   </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 border border-green-200">
-                    <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
-                    <span className="text-xs font-semibold text-green-700">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200">
+                    <ShieldCheck className="h-3.5 w-3.5 text-blue-700" />
+                    <span className="text-xs font-semibold text-blue-700">
                       Verified
                     </span>
                   </div>
@@ -906,7 +1884,7 @@ export default function Home() {
                   {agency.category}
                 </span>
                 <div className="flex items-center gap-1.5 pt-3 border-t border-border">
-                  <Star className="h-3.5 w-3.5 fill-gold text-gold" />
+                  <Star className="h-3.5 w-3.5 fill-[#C9A227] text-[#C9A227]" />
                   <span className="font-bold text-sm">{agency.rating}</span>
                   <span className="text-muted-foreground text-xs">
                     ({agency.reviews} reviews)
@@ -929,7 +1907,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* NEWSLETTER */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="py-16 bg-primary">
         <div className="container-custom text-center">
           <div className="max-w-2xl mx-auto">
@@ -962,7 +1942,7 @@ export default function Home() {
                 type="submit"
                 data-ocid="newsletter.submit_button"
                 disabled={newsletterMutation.isPending}
-                className="h-12 px-6 bg-gold hover:bg-gold-dark text-white font-semibold rounded-xl border-0 flex-shrink-0"
+                className="h-12 px-6 bg-[#1E40AF] hover:bg-[#1E3A8A] text-white font-semibold rounded-xl border-0 flex-shrink-0"
               >
                 {newsletterMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -975,7 +1955,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA BANNER */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* CTA BANNER (BOTTOM) */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <section className="section-padding bg-royal-50">
         <div className="container-custom">
           <div className="blue-gradient rounded-3xl p-10 md:p-16 text-center relative overflow-hidden">
@@ -985,7 +1967,7 @@ export default function Home() {
             />
             <div
               className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full"
-              style={{ background: "rgba(var(--accent), 0.1)" }}
+              style={{ background: "rgba(229, 57, 53, 0.1)" }}
             />
             <div className="relative z-10">
               <h2 className="font-bold text-3xl md:text-4xl lg:text-5xl text-white mb-4">
@@ -1002,7 +1984,7 @@ export default function Home() {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-gold hover:bg-gold-dark text-white font-semibold h-14 px-10 rounded-2xl border-0 shadow-gold"
+                  className="bg-[#E53935] hover:bg-[#C62828] text-white font-semibold h-14 px-10 rounded-2xl border-0 shadow-red"
                 >
                   <Link to="/partner">Join Now — Free</Link>
                 </Button>

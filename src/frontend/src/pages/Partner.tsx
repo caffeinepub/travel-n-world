@@ -148,7 +148,7 @@ export default function Partner() {
                 </p>
                 <button
                   type="button"
-                  className="text-gold font-semibold text-sm hover:text-gold-light transition-colors"
+                  className="text-white font-semibold text-sm hover:text-[#93C5FD] transition-colors"
                   onClick={() => toast.info("Partner portal coming soon!")}
                 >
                   Login to Partner Portal \u2192

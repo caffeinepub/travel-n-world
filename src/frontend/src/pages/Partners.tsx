@@ -1,5 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { MapPin, Search, ShieldCheck, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -29,22 +38,12 @@ const CATEGORIES = [
 
 const CATEGORY_COLORS: Record<string, string> = {
   Domestic: "bg-blue-100 text-blue-700",
-  International: "bg-purple-100 text-purple-700",
-  Luxury: "bg-amber-100 text-amber-700",
-  Adventure: "bg-green-100 text-green-700",
+  International: "bg-red-100 text-red-700",
+  Luxury: "bg-[#FEF3C7] text-[#92400E]",
+  Adventure: "bg-[#D1FAE5] text-[#065F46]",
   Honeymoon: "bg-pink-100 text-pink-700",
   Corporate: "bg-slate-100 text-slate-700",
   "Group Tours": "bg-orange-100 text-orange-700",
-};
-
-const _CATEGORY_BG: Record<string, string> = {
-  Domestic: "rgba(219,234,254,0.35)",
-  International: "rgba(237,233,254,0.35)",
-  Luxury: "rgba(254,243,199,0.35)",
-  Adventure: "rgba(220,252,231,0.35)",
-  Honeymoon: "rgba(252,231,243,0.35)",
-  Corporate: "rgba(241,245,249,0.35)",
-  "Group Tours": "rgba(255,237,213,0.35)",
 };
 
 const agencyData: Agency[] = [
@@ -1700,13 +1699,109 @@ const agencyData: Agency[] = [
   },
 ];
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 12;
+
+function getPageNumbers(
+  currentPage: number,
+  totalPages: number,
+): (number | "ellipsis")[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  const pages: (number | "ellipsis")[] = [1];
+  if (currentPage > 3) pages.push("ellipsis");
+  for (
+    let i = Math.max(2, currentPage - 1);
+    i <= Math.min(totalPages - 1, currentPage + 1);
+    i++
+  ) {
+    pages.push(i);
+  }
+  if (currentPage < totalPages - 2) pages.push("ellipsis");
+  pages.push(totalPages);
+  return pages;
+}
 
 function VerifiedBadge() {
   return (
-    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 border border-green-200">
-      <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
-      <span className="text-xs font-semibold text-green-700">Verified</span>
+    <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200">
+      <ShieldCheck className="h-3 w-3 text-blue-700" />
+      <span className="text-xs font-semibold text-blue-700">
+        Verified Partner
+      </span>
+    </div>
+  );
+}
+
+interface AgencyCardProps {
+  agency: Agency;
+  index: number;
+}
+
+function AgencyCard({ agency, index }: AgencyCardProps) {
+  return (
+    <div
+      data-ocid={`partners.card.${index + 1}`}
+      className="group relative bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+    >
+      {/* Blue top border reveal on hover */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-700 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+
+      <div className="p-5">
+        {/* Top row: avatar + verified badge */}
+        <div className="flex items-start justify-between mb-4">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)",
+            }}
+          >
+            {agency.name.charAt(0)}
+          </div>
+          <VerifiedBadge />
+        </div>
+
+        {/* Name */}
+        <h3 className="font-bold text-[15px] text-gray-900 mb-1 group-hover:text-blue-700 transition-colors duration-200 leading-snug">
+          {agency.name}
+        </h3>
+
+        {/* City */}
+        <p className="text-gray-500 text-sm flex items-center gap-1 mb-3">
+          <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+          {agency.city}
+        </p>
+
+        {/* Specialization tag */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          <span
+            className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full ${
+              CATEGORY_COLORS[agency.category] ?? "bg-gray-100 text-gray-700"
+            }`}
+          >
+            {agency.category}
+          </span>
+        </div>
+
+        {/* Speciality */}
+        <p className="text-gray-400 text-xs leading-relaxed mb-4 line-clamp-2">
+          {agency.speciality}
+        </p>
+
+        {/* Bottom row */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-1">
+            <Star className="h-3.5 w-3.5 fill-[#C9A227] text-[#C9A227]" />
+            <span className="font-bold text-sm text-gray-800">
+              {agency.rating}
+            </span>
+            <span className="text-gray-400 text-xs">({agency.reviews})</span>
+          </div>
+          <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full">
+            {agency.yearsInBusiness} yrs exp
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1714,18 +1809,13 @@ function VerifiedBadge() {
 export default function Partners() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useScrollReveal();
 
   useEffect(() => {
     document.title = "Verified Travel Partners — Travel N World";
   }, []);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on filter/search change
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [search, activeCategory]);
 
   const filtered = useMemo(() => {
     return agencyData.filter((a) => {
@@ -1741,8 +1831,37 @@ export default function Partners() {
     });
   }, [search, activeCategory]);
 
-  const visible = filtered.slice(0, visibleCount);
-  const hasMore = visibleCount < filtered.length;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+  // Reset to page 1 on filter/search change
+  const safePage = Math.min(currentPage, totalPages);
+
+  const startIndex = (safePage - 1) * PAGE_SIZE;
+  const endIndex = Math.min(startIndex + PAGE_SIZE, filtered.length);
+  const pageItems = filtered.slice(startIndex, endIndex);
+
+  function handleCategoryChange(cat: string) {
+    setActiveCategory(cat);
+    setCurrentPage(1);
+  }
+
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    setCurrentPage(1);
+  }
+
+  function scrollToGrid() {
+    document
+      .getElementById("partners-grid")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function goToPage(page: number) {
+    setCurrentPage(page);
+    scrollToGrid();
+  }
+
+  const pageNumbers = getPageNumbers(safePage, totalPages);
 
   return (
     <div>
@@ -1767,7 +1886,7 @@ export default function Partners() {
               backdropFilter: "blur(8px)",
             }}
           >
-            <ShieldCheck className="h-4 w-4 text-gold" />
+            <ShieldCheck className="h-4 w-4" style={{ color: "#f59e0b" }} />
             <span className="text-sm font-semibold text-white">
               100% Verified & Background-Checked
             </span>
@@ -1782,7 +1901,6 @@ export default function Partners() {
             Discover 150+ thoroughly vetted travel agencies trusted by thousands
             of travelers across India
           </p>
-          {/* Stat Strip */}
           <div
             className="inline-flex flex-wrap items-center justify-center gap-2 md:gap-6 px-8 py-4 rounded-2xl animate-fade-up"
             style={{
@@ -1800,7 +1918,12 @@ export default function Partners() {
                 {i > 0 && (
                   <span className="hidden md:block w-px h-6 bg-white/20" />
                 )}
-                <span className="font-bold text-gold text-2xl">{s.num}</span>
+                <span
+                  className="font-bold text-2xl"
+                  style={{ color: "#f59e0b" }}
+                >
+                  {s.num}
+                </span>
                 <span className="text-white/80 text-sm">{s.label}</span>
               </div>
             ))}
@@ -1808,153 +1931,172 @@ export default function Partners() {
         </div>
       </section>
 
-      {/* SEARCH + FILTER */}
-      <section className="bg-white sticky top-20 z-30 border-b border-border shadow-xs">
+      {/* SEARCH + FILTER BAR */}
+      <section className="bg-white sticky top-20 z-30 border-b border-gray-200 shadow-sm">
         <div className="container-custom py-4">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-            {/* Search */}
-            <div className="relative flex-1 min-w-0 max-w-md">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                data-ocid="partners.search_input"
-                placeholder="Search agencies by name or city..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 rounded-xl border-border h-11"
-              />
-            </div>
-            {/* Filter tabs */}
-            <div className="flex flex-wrap gap-1.5">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  data-ocid="partners.filter.tab"
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-3.5 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                    activeCategory === cat
-                      ? "bg-primary text-white shadow-blue"
-                      : "bg-royal-50 text-foreground hover:bg-royal-100"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+          {/* Search bar */}
+          <div className="relative mb-3 max-w-2xl mx-auto md:mx-0">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              data-ocid="partners.search_input"
+              placeholder="Search by agency name, city, or specialization..."
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-11 pr-4 h-12 rounded-xl border-gray-200 text-sm shadow-sm focus-visible:ring-blue-700 focus-visible:border-blue-700"
+            />
+          </div>
+          {/* Category filters */}
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                data-ocid="partners.filter.tab"
+                onClick={() => handleCategoryChange(cat)}
+                className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  activeCategory === cat
+                    ? "text-white shadow-sm"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={activeCategory === cat ? { background: "#1E40AF" } : {}}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
       {/* GRID */}
-      <section className="section-padding bg-royal-50">
+      <section id="partners-grid" className="py-12 bg-gray-50">
         <div className="container-custom">
-          <div className="mb-6 flex items-center justify-between">
-            <p className="text-muted-foreground text-sm">
-              Showing{" "}
-              <span className="font-semibold text-foreground">
-                {visible.length}
-              </span>{" "}
-              of{" "}
-              <span className="font-semibold text-foreground">
-                {filtered.length}
-              </span>{" "}
-              agencies
+          {/* Results counter */}
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <p className="text-gray-500 text-sm">
+              {filtered.length === 0 ? (
+                "No agencies found"
+              ) : (
+                <>
+                  Showing{" "}
+                  <span className="font-semibold text-gray-800">
+                    {startIndex + 1}–{endIndex}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-gray-800">
+                    {filtered.length}
+                  </span>{" "}
+                  agencies
+                </>
+              )}
             </p>
+            {filtered.length > 0 && totalPages > 1 && (
+              <p className="text-gray-400 text-xs">
+                Page {safePage} of {totalPages}
+              </p>
+            )}
           </div>
 
+          {/* Empty state */}
           {filtered.length === 0 ? (
             <div data-ocid="partners.empty_state" className="text-center py-20">
-              <div className="w-16 h-16 bg-royal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Search className="h-7 w-7 text-primary" />
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: "#EFF6FF" }}
+              >
+                <Search className="h-7 w-7" style={{ color: "#1E40AF" }} />
               </div>
-              <h3 className="font-semibold text-xl text-foreground mb-2">
+              <h3 className="font-semibold text-xl text-gray-800 mb-2">
                 No agencies found
               </h3>
-              <p className="text-muted-foreground mb-5">
+              <p className="text-gray-400 mb-5">
                 Try a different search term or category filter
               </p>
               <Button
                 onClick={() => {
                   setSearch("");
                   setActiveCategory("All");
+                  setCurrentPage(1);
                 }}
                 variant="outline"
-                className="border-primary text-primary hover:bg-primary hover:text-white rounded-xl"
+                className="border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white rounded-xl"
               >
                 Clear Filters
               </Button>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {visible.map((agency, i) => (
-                  <div
-                    key={agency.id}
-                    data-ocid={`partners.card.${i + 1}`}
-                    className={`group partner-card-hover reveal reveal-delay-${(i % 3) + 1} bg-white rounded-2xl border border-border shadow-sm cursor-pointer`}
-                  >
-                    <div className="p-6">
-                      {/* Top row */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 blue-gradient rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md flex-shrink-0">
-                          {agency.name.charAt(0)}
-                        </div>
-                        <VerifiedBadge />
-                      </div>
-
-                      {/* Name + city */}
-                      <h3 className="font-bold text-base text-foreground mb-1 group-hover:text-primary transition-colors duration-200">
-                        {agency.name}
-                      </h3>
-                      <p className="text-muted-foreground text-sm flex items-center gap-1 mb-3">
-                        <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                        {agency.city}
-                      </p>
-
-                      {/* Category badge */}
-                      <span
-                        className={`inline-block px-2.5 py-1 text-xs font-semibold rounded-full mb-3 ${CATEGORY_COLORS[agency.category]}`}
-                      >
-                        {agency.category}
-                      </span>
-
-                      {/* Speciality */}
-                      <p className="text-muted-foreground text-xs leading-relaxed mb-4">
-                        {agency.speciality}
-                      </p>
-
-                      {/* Bottom row */}
-                      <div className="flex items-center justify-between pt-3 border-t border-border">
-                        <div className="flex items-center gap-1.5">
-                          <Star className="h-3.5 w-3.5 fill-gold text-gold" />
-                          <span className="font-bold text-sm text-foreground">
-                            {agency.rating}
-                          </span>
-                          <span className="text-muted-foreground text-xs">
-                            ({agency.reviews} reviews)
-                          </span>
-                        </div>
-                        <span className="px-2.5 py-1 bg-royal-50 text-primary text-xs font-medium rounded-full">
-                          {agency.yearsInBusiness} yrs
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+              {/* Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {pageItems.map((agency, i) => (
+                  <AgencyCard key={agency.id} agency={agency} index={i} />
                 ))}
               </div>
 
-              {/* Load More */}
-              {hasMore && (
-                <div className="text-center mt-12">
-                  <Button
-                    data-ocid="partners.primary_button"
-                    size="lg"
-                    onClick={() => setVisibleCount((p) => p + PAGE_SIZE)}
-                    className="bg-primary hover:bg-primary-light text-white font-semibold h-12 px-10 rounded-2xl border-0 shadow-blue"
-                  >
-                    Load More Agencies ({filtered.length - visibleCount}{" "}
-                    remaining)
-                  </Button>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-10 flex flex-col items-center gap-3">
+                  <Pagination>
+                    <PaginationContent className="flex-wrap justify-center gap-1">
+                      <PaginationItem>
+                        <PaginationPrevious
+                          data-ocid="partners.pagination_prev"
+                          onClick={() => safePage > 1 && goToPage(safePage - 1)}
+                          className={`cursor-pointer rounded-lg transition-colors ${
+                            safePage === 1
+                              ? "pointer-events-none opacity-40"
+                              : "hover:bg-blue-50 hover:text-blue-700"
+                          }`}
+                        />
+                      </PaginationItem>
+
+                      {pageNumbers.map((pg, idx) =>
+                        pg === "ellipsis" ? (
+                          <PaginationItem
+                            key={`ellipsis-before-${String(pageNumbers[idx + 1])}`}
+                          >
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        ) : (
+                          <PaginationItem key={pg}>
+                            <PaginationLink
+                              data-ocid={"partners.pagination_next"}
+                              onClick={() => goToPage(pg as number)}
+                              isActive={safePage === pg}
+                              className={`cursor-pointer rounded-lg w-9 h-9 flex items-center justify-center text-sm font-medium transition-all ${
+                                safePage === pg
+                                  ? "text-white shadow-sm"
+                                  : "hover:bg-blue-50 hover:text-blue-700"
+                              }`}
+                              style={
+                                safePage === pg
+                                  ? {
+                                      background: "#1E40AF",
+                                      borderColor: "#1E40AF",
+                                    }
+                                  : {}
+                              }
+                            >
+                              {pg}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ),
+                      )}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          data-ocid="partners.pagination_next"
+                          onClick={() =>
+                            safePage < totalPages && goToPage(safePage + 1)
+                          }
+                          className={`cursor-pointer rounded-lg transition-colors ${
+                            safePage === totalPages
+                              ? "pointer-events-none opacity-40"
+                              : "hover:bg-blue-50 hover:text-blue-700"
+                          }`}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
                 </div>
               )}
             </>

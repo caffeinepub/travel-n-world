@@ -152,7 +152,7 @@ export default function Destinations() {
                     }}
                   />
                   <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 text-white text-xs font-bold rounded-full bg-gold">
+                    <span className="px-3 py-1 text-white text-xs font-bold rounded-full bg-[#1E40AF]">
                       {dest.tag}
                     </span>
                   </div>
@@ -175,7 +175,7 @@ export default function Destinations() {
                       >
                         {dest.nights}
                       </div>
-                      <div className="font-semibold text-gold text-sm">
+                      <div className="font-semibold text-white text-sm">
                         {dest.price}
                       </div>
                     </div>

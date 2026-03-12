@@ -142,7 +142,7 @@ export default function Services() {
                       key={f}
                       className="flex items-center gap-2 text-xs text-muted-foreground"
                     >
-                      <span className="w-1.5 h-1.5 bg-gold rounded-full flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 bg-[#1E40AF] rounded-full flex-shrink-0" />
                       {f}
                     </li>
                   ))}

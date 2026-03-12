@@ -179,7 +179,7 @@ export default function About() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {stats.map((s, i) => (
               <div key={s.label} className={`reveal reveal-delay-${i + 1}`}>
-                <div className="font-bold text-4xl md:text-5xl text-gold mb-2">
+                <div className="font-bold text-4xl md:text-5xl text-white mb-2">
                   {s.num}
                 </div>
                 <div

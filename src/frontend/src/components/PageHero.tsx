@@ -21,7 +21,7 @@ export default function PageHero({
           className="absolute -bottom-10 -left-10 w-64 h-64 rounded-full"
           style={{ background: "rgba(255,255,255,0.04)" }}
         />
-        <div className="absolute top-1/2 left-1/4 w-2 h-2 rounded-full bg-gold opacity-60" />
+        <div className="absolute top-1/2 left-1/4 w-2 h-2 rounded-full bg-white opacity-30" />
         <div
           className="absolute top-1/3 right-1/3 w-3 h-3 rounded-full"
           style={{ background: "rgba(255,255,255,0.3)" }}

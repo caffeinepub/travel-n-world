@@ -240,7 +240,7 @@ export default function Contact() {
                     className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
                     style={{ background: "rgba(255,255,255,0.15)" }}
                   >
-                    <MapPin className="h-8 w-8 text-gold" />
+                    <MapPin className="h-8 w-8 text-white" />
                   </div>
                   <div className="font-bold text-white text-xl mb-2">
                     Travel N World HQ
@@ -257,7 +257,7 @@ export default function Contact() {
                   >
                     Connaught Place, New Delhi
                   </div>
-                  <div className="mt-6 px-5 py-2.5 bg-gold rounded-xl text-white text-sm font-semibold inline-block cursor-pointer hover:bg-gold-dark transition-colors">
+                  <div className="mt-6 px-5 py-2.5 bg-[#1E40AF] rounded-xl text-white text-sm font-semibold inline-block cursor-pointer hover:bg-[#1E3A8A] transition-colors">
                     Get Directions
                   </div>
                 </div>
