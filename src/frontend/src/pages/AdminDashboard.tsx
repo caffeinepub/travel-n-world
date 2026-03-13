@@ -27,11 +27,11 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import * as XLSX from "xlsx";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type PartnerStatus = "Pending" | "Approved" | "Verified" | "Rejected";
+type PartnerType = "Travel Agent" | "Hotel Partner" | "DMC Partner";
 type LeadStatus = "Active" | "Converted" | "Archived";
 type InquiryStatus = "New" | "Contacted" | "Confirmed" | "Deleted";
 type PlanType = "Starter" | "Professional" | "Premium";
@@ -49,6 +49,7 @@ interface PartnerReg {
   status: PartnerStatus;
   planStatus?: string;
   isNew?: boolean;
+  partnerType?: PartnerType;
 }
 
 interface Lead {
@@ -105,6 +106,29 @@ interface Booking {
   status: "Confirmed" | "Pending" | "Cancelled";
 }
 
+interface HotelBooking {
+  id: number;
+  customerName: string;
+  hotelName: string;
+  city: string;
+  roomType: string;
+  checkIn: string;
+  checkOut: string;
+  bookingValue: string;
+  status: "Confirmed" | "Pending" | "Cancelled";
+}
+
+interface DmcBooking {
+  id: number;
+  customerName: string;
+  destination: string;
+  dmcPartner: string;
+  serviceType: string;
+  travelDate: string;
+  bookingValue: string;
+  status: "Confirmed" | "Pending" | "Cancelled";
+}
+
 // ─── Sample Data ─────────────────────────────────────────────────────────────
 
 const INITIAL_REGISTRATIONS: PartnerReg[] = [
@@ -118,6 +142,7 @@ const INITIAL_REGISTRATIONS: PartnerReg[] = [
     date: "2026-03-01",
     status: "Pending",
     planStatus: "None",
+    partnerType: "Travel Agent",
   },
   {
     id: 2,
@@ -129,6 +154,7 @@ const INITIAL_REGISTRATIONS: PartnerReg[] = [
     date: "2026-03-03",
     status: "Approved",
     planStatus: "Professional",
+    partnerType: "Hotel Partner",
   },
   {
     id: 3,
@@ -140,6 +166,7 @@ const INITIAL_REGISTRATIONS: PartnerReg[] = [
     date: "2026-02-28",
     status: "Verified",
     planStatus: "Premium",
+    partnerType: "DMC Partner",
   },
   {
     id: 4,
@@ -151,6 +178,7 @@ const INITIAL_REGISTRATIONS: PartnerReg[] = [
     date: "2026-02-25",
     status: "Pending",
     planStatus: "None",
+    partnerType: "Travel Agent",
   },
   {
     id: 5,
@@ -162,6 +190,7 @@ const INITIAL_REGISTRATIONS: PartnerReg[] = [
     date: "2026-02-20",
     status: "Approved",
     planStatus: "Starter",
+    partnerType: "Hotel Partner",
   },
 ];
 
@@ -331,6 +360,432 @@ const PARTNER_NAMES = [
   "BlueSky Holidays",
   "Globe Trotters",
   "Dreamland Travels",
+];
+
+const HOTEL_BOOKINGS: HotelBooking[] = [
+  {
+    id: 1,
+    customerName: "Rahul Mehta",
+    hotelName: "Taj Palace",
+    city: "Delhi",
+    roomType: "Deluxe Suite",
+    checkIn: "2026-04-10",
+    checkOut: "2026-04-13",
+    bookingValue: "₹32,000",
+    status: "Confirmed",
+  },
+  {
+    id: 2,
+    customerName: "Sneha Sharma",
+    hotelName: "Leela Palace",
+    city: "Jaipur",
+    roomType: "Heritage Room",
+    checkIn: "2026-04-15",
+    checkOut: "2026-04-18",
+    bookingValue: "₹28,500",
+    status: "Confirmed",
+  },
+  {
+    id: 3,
+    customerName: "Amit Kumar",
+    hotelName: "Taj Lake Palace",
+    city: "Udaipur",
+    roomType: "Lake View Room",
+    checkIn: "2026-05-01",
+    checkOut: "2026-05-04",
+    bookingValue: "₹45,000",
+    status: "Pending",
+  },
+  {
+    id: 4,
+    customerName: "Pooja Singh",
+    hotelName: "The Oberoi",
+    city: "Mumbai",
+    roomType: "Sea View Suite",
+    checkIn: "2026-05-10",
+    checkOut: "2026-05-12",
+    bookingValue: "₹38,000",
+    status: "Confirmed",
+  },
+  {
+    id: 5,
+    customerName: "Vikash Yadav",
+    hotelName: "Radisson Blu",
+    city: "Goa",
+    roomType: "Beach Villa",
+    checkIn: "2026-03-28",
+    checkOut: "2026-04-01",
+    bookingValue: "₹22,000",
+    status: "Confirmed",
+  },
+  {
+    id: 6,
+    customerName: "Neha Gupta",
+    hotelName: "ITC Grand",
+    city: "Kolkata",
+    roomType: "Grand Suite",
+    checkIn: "2026-06-05",
+    checkOut: "2026-06-08",
+    bookingValue: "₹18,000",
+    status: "Pending",
+  },
+  {
+    id: 7,
+    customerName: "Sanjay Patel",
+    hotelName: "Hyatt Regency",
+    city: "Bangalore",
+    roomType: "Regency Club",
+    checkIn: "2026-06-12",
+    checkOut: "2026-06-14",
+    bookingValue: "₹15,500",
+    status: "Confirmed",
+  },
+  {
+    id: 8,
+    customerName: "Ritu Agarwal",
+    hotelName: "Marriott",
+    city: "Pune",
+    roomType: "Deluxe Room",
+    checkIn: "2026-07-01",
+    checkOut: "2026-07-03",
+    bookingValue: "₹12,000",
+    status: "Cancelled",
+  },
+  {
+    id: 9,
+    customerName: "Deepak Verma",
+    hotelName: "Sheraton",
+    city: "Chennai",
+    roomType: "Sea View",
+    checkIn: "2026-07-10",
+    checkOut: "2026-07-13",
+    bookingValue: "₹14,000",
+    status: "Confirmed",
+  },
+  {
+    id: 10,
+    customerName: "Kavita Joshi",
+    hotelName: "JW Marriott",
+    city: "Delhi",
+    roomType: "Executive Suite",
+    checkIn: "2026-07-20",
+    checkOut: "2026-07-22",
+    bookingValue: "₹25,000",
+    status: "Pending",
+  },
+  {
+    id: 11,
+    customerName: "Manish Tiwari",
+    hotelName: "Taj Palace",
+    city: "Delhi",
+    roomType: "Standard Room",
+    checkIn: "2026-08-01",
+    checkOut: "2026-08-03",
+    bookingValue: "₹16,000",
+    status: "Confirmed",
+  },
+  {
+    id: 12,
+    customerName: "Priya Nair",
+    hotelName: "Leela Palace",
+    city: "Jaipur",
+    roomType: "Royal Suite",
+    checkIn: "2026-08-10",
+    checkOut: "2026-08-14",
+    bookingValue: "₹42,000",
+    status: "Confirmed",
+  },
+  {
+    id: 13,
+    customerName: "Arun Mishra",
+    hotelName: "Radisson Blu",
+    city: "Goa",
+    roomType: "Garden Room",
+    checkIn: "2026-08-20",
+    checkOut: "2026-08-24",
+    bookingValue: "₹19,000",
+    status: "Pending",
+  },
+  {
+    id: 14,
+    customerName: "Sunita Reddy",
+    hotelName: "The Oberoi",
+    city: "Mumbai",
+    roomType: "Luxury Room",
+    checkIn: "2026-09-01",
+    checkOut: "2026-09-03",
+    bookingValue: "₹29,000",
+    status: "Confirmed",
+  },
+  {
+    id: 15,
+    customerName: "Rajesh Kumar",
+    hotelName: "Hyatt Regency",
+    city: "Bangalore",
+    roomType: "King Room",
+    checkIn: "2026-09-10",
+    checkOut: "2026-09-12",
+    bookingValue: "₹13,500",
+    status: "Cancelled",
+  },
+  {
+    id: 16,
+    customerName: "Meena Sharma",
+    hotelName: "ITC Grand",
+    city: "Kolkata",
+    roomType: "Business Suite",
+    checkIn: "2026-09-15",
+    checkOut: "2026-09-17",
+    bookingValue: "₹17,000",
+    status: "Confirmed",
+  },
+  {
+    id: 17,
+    customerName: "Arjun Singh",
+    hotelName: "Sheraton",
+    city: "Chennai",
+    roomType: "Deluxe Twin",
+    checkIn: "2026-10-01",
+    checkOut: "2026-10-04",
+    bookingValue: "₹11,500",
+    status: "Pending",
+  },
+  {
+    id: 18,
+    customerName: "Divya Patel",
+    hotelName: "JW Marriott",
+    city: "Delhi",
+    roomType: "Club Room",
+    checkIn: "2026-10-10",
+    checkOut: "2026-10-12",
+    bookingValue: "₹20,000",
+    status: "Confirmed",
+  },
+  {
+    id: 19,
+    customerName: "Rohit Jain",
+    hotelName: "Marriott",
+    city: "Pune",
+    roomType: "Suite",
+    checkIn: "2026-10-20",
+    checkOut: "2026-10-23",
+    bookingValue: "₹8,500",
+    status: "Confirmed",
+  },
+  {
+    id: 20,
+    customerName: "Ankita Roy",
+    hotelName: "Taj Lake Palace",
+    city: "Udaipur",
+    roomType: "Heritage Suite",
+    checkIn: "2026-11-01",
+    checkOut: "2026-11-04",
+    bookingValue: "₹44,000",
+    status: "Pending",
+  },
+];
+
+const DMC_BOOKINGS: DmcBooking[] = [
+  {
+    id: 1,
+    customerName: "Rohit Agarwal",
+    destination: "Kedarnath",
+    dmcPartner: "Char Dham Yatra Services",
+    serviceType: "Pilgrimage Tours",
+    travelDate: "2026-05-10",
+    bookingValue: "₹12,000",
+    status: "Confirmed",
+  },
+  {
+    id: 2,
+    customerName: "Sneha Jain",
+    destination: "Badrinath",
+    dmcPartner: "Himalayan Adventures",
+    serviceType: "Pilgrimage Tours",
+    travelDate: "2026-05-20",
+    bookingValue: "₹10,500",
+    status: "Confirmed",
+  },
+  {
+    id: 3,
+    customerName: "Deepak Verma",
+    destination: "Goa",
+    dmcPartner: "Goa Ground Services",
+    serviceType: "Airport Transfers",
+    travelDate: "2026-04-15",
+    bookingValue: "₹3,500",
+    status: "Confirmed",
+  },
+  {
+    id: 4,
+    customerName: "Priya Singh",
+    destination: "Kerala",
+    dmcPartner: "Kerala DMC",
+    serviceType: "Backwater Cruise",
+    travelDate: "2026-06-01",
+    bookingValue: "₹9,000",
+    status: "Pending",
+  },
+  {
+    id: 5,
+    customerName: "Arun Mishra",
+    destination: "Manali",
+    dmcPartner: "Himachal DMC",
+    serviceType: "Adventure Tours",
+    travelDate: "2026-06-15",
+    bookingValue: "₹15,000",
+    status: "Confirmed",
+  },
+  {
+    id: 6,
+    customerName: "Nita Bose",
+    destination: "Kashmir",
+    dmcPartner: "Kashmir Travel Co",
+    serviceType: "Local Sightseeing",
+    travelDate: "2026-07-01",
+    bookingValue: "₹8,500",
+    status: "Confirmed",
+  },
+  {
+    id: 7,
+    customerName: "Vikash Yadav",
+    destination: "Gangotri",
+    dmcPartner: "Char Dham Yatra Services",
+    serviceType: "Pilgrimage Tours",
+    travelDate: "2026-05-25",
+    bookingValue: "₹11,000",
+    status: "Pending",
+  },
+  {
+    id: 8,
+    customerName: "Meena Patel",
+    destination: "Rishikesh",
+    dmcPartner: "Himalayan Adventures",
+    serviceType: "Adventure Tours",
+    travelDate: "2026-04-20",
+    bookingValue: "₹7,500",
+    status: "Confirmed",
+  },
+  {
+    id: 9,
+    customerName: "Ravi Kumar",
+    destination: "Yamunotri",
+    dmcPartner: "Char Dham Yatra Services",
+    serviceType: "Pilgrimage Tours",
+    travelDate: "2026-05-15",
+    bookingValue: "₹13,500",
+    status: "Confirmed",
+  },
+  {
+    id: 10,
+    customerName: "Pooja Sharma",
+    destination: "Himachal Pradesh",
+    dmcPartner: "Himachal DMC",
+    serviceType: "Snow Trekking",
+    travelDate: "2026-01-10",
+    bookingValue: "₹18,000",
+    status: "Cancelled",
+  },
+  {
+    id: 11,
+    customerName: "Sanjay Patel",
+    destination: "Uttarakhand",
+    dmcPartner: "Himalayan Adventures",
+    serviceType: "Jungle Safari",
+    travelDate: "2026-09-05",
+    bookingValue: "₹6,500",
+    status: "Confirmed",
+  },
+  {
+    id: 12,
+    customerName: "Kavita Joshi",
+    destination: "Kerala",
+    dmcPartner: "Kerala DMC",
+    serviceType: "Local Sightseeing",
+    travelDate: "2026-08-15",
+    bookingValue: "₹5,000",
+    status: "Confirmed",
+  },
+  {
+    id: 13,
+    customerName: "Manish Tiwari",
+    destination: "Goa",
+    dmcPartner: "Goa Ground Services",
+    serviceType: "Local Sightseeing",
+    travelDate: "2026-10-01",
+    bookingValue: "₹4,500",
+    status: "Pending",
+  },
+  {
+    id: 14,
+    customerName: "Ritu Agarwal",
+    destination: "Kashmir",
+    dmcPartner: "Kashmir Travel Co",
+    serviceType: "Heritage Walk",
+    travelDate: "2026-07-20",
+    bookingValue: "₹6,000",
+    status: "Confirmed",
+  },
+  {
+    id: 15,
+    customerName: "Arjun Singh",
+    destination: "Manali",
+    dmcPartner: "Himachal DMC",
+    serviceType: "Adventure Tours",
+    travelDate: "2026-07-10",
+    bookingValue: "₹16,500",
+    status: "Confirmed",
+  },
+  {
+    id: 16,
+    customerName: "Divya Patel",
+    destination: "Rishikesh",
+    dmcPartner: "Himalayan Adventures",
+    serviceType: "Adventure Tours",
+    travelDate: "2026-06-25",
+    bookingValue: "₹8,000",
+    status: "Confirmed",
+  },
+  {
+    id: 17,
+    customerName: "Sunita Reddy",
+    destination: "Kerala",
+    dmcPartner: "Kerala DMC",
+    serviceType: "Backwater Cruise",
+    travelDate: "2026-09-10",
+    bookingValue: "₹9,500",
+    status: "Pending",
+  },
+  {
+    id: 18,
+    customerName: "Rajesh Kumar",
+    destination: "Uttarakhand",
+    dmcPartner: "Himalayan Adventures",
+    serviceType: "Pilgrimage Tours",
+    travelDate: "2026-05-05",
+    bookingValue: "₹14,000",
+    status: "Confirmed",
+  },
+  {
+    id: 19,
+    customerName: "Ankita Roy",
+    destination: "Goa",
+    dmcPartner: "Goa Ground Services",
+    serviceType: "Airport Transfers",
+    travelDate: "2026-11-10",
+    bookingValue: "₹3,800",
+    status: "Confirmed",
+  },
+  {
+    id: 20,
+    customerName: "Neha Gupta",
+    destination: "Badrinath",
+    dmcPartner: "Char Dham Yatra Services",
+    serviceType: "Pilgrimage Tours",
+    travelDate: "2026-06-10",
+    bookingValue: "₹12,500",
+    status: "Pending",
+  },
 ];
 
 // ─── Color Maps ───────────────────────────────────────────────────────────────
@@ -534,6 +989,8 @@ const NAV_ITEMS = [
   { id: "partners", label: "Partners", icon: Users },
   { id: "plans", label: "B2B Plans", icon: CreditCard },
   { id: "bookings", label: "Bookings", icon: BookOpen },
+  { id: "hotel-bookings", label: "Hotel Bookings", icon: Building2 },
+  { id: "dmc-bookings", label: "DMC Bookings", icon: Globe },
 ];
 
 function Sidebar({
@@ -707,6 +1164,27 @@ function OverviewTab({
       icon: Globe,
       color: "#0f766e",
       bg: "#ccfbf1",
+    },
+    {
+      label: "Total Hotel Bookings",
+      value: "40,000+",
+      icon: Building2,
+      color: "#b45309",
+      bg: "#fef3c7",
+    },
+    {
+      label: "Travel Package Bookings",
+      value: "35,000+",
+      icon: BookOpen,
+      color: "#0891b2",
+      bg: "#cffafe",
+    },
+    {
+      label: "DMC Service Bookings",
+      value: "25,000+",
+      icon: Globe,
+      color: "#7c3aed",
+      bg: "#ede9fe",
     },
   ];
 
@@ -1681,15 +2159,18 @@ function PartnersTab({
   setPartners,
 }: { partners: PartnerReg[]; setPartners: (p: PartnerReg[]) => void }) {
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("All");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState<Partial<PartnerReg>>({});
 
-  const filtered = partners.filter(
-    (p) =>
+  const filtered = partners.filter((p) => {
+    const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.company.toLowerCase().includes(search.toLowerCase()) ||
-      p.city.toLowerCase().includes(search.toLowerCase()),
-  );
+      p.city.toLowerCase().includes(search.toLowerCase());
+    const matchesType = typeFilter === "All" || p.partnerType === typeFilter;
+    return matchesSearch && matchesType;
+  });
 
   const update = (id: number, patch: Partial<PartnerReg>) => {
     const updated = partners.map((p) =>
@@ -1735,33 +2216,62 @@ function PartnersTab({
         >
           Partners Management
         </h2>
-        <div style={{ position: "relative" }}>
-          <Search
-            size={16}
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ position: "relative" }}>
+            <Search
+              size={16}
+              style={{
+                position: "absolute",
+                left: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "#9ca3af",
+              }}
+            />
+            <input
+              data-ocid="partners.search_input"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search partners..."
+              style={{
+                paddingLeft: "34px",
+                paddingRight: "12px",
+                height: "38px",
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px",
+                fontSize: "14px",
+                outline: "none",
+                width: "220px",
+              }}
+            />
+          </div>
+          <select
+            data-ocid="partners.type.select"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
             style={{
-              position: "absolute",
-              left: "10px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: "#9ca3af",
-            }}
-          />
-          <input
-            data-ocid="partners.search_input"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search partners..."
-            style={{
-              paddingLeft: "34px",
-              paddingRight: "12px",
               height: "38px",
               border: "1px solid #e5e7eb",
               borderRadius: "8px",
               fontSize: "14px",
+              padding: "0 12px",
               outline: "none",
-              width: "220px",
+              background: "#fff",
+              cursor: "pointer",
             }}
-          />
+          >
+            <option value="All">All Types</option>
+            <option value="Travel Agent">Travel Agent</option>
+            <option value="Hotel Partner">Hotel Partner</option>
+            <option value="DMC Partner">DMC Partner</option>
+          </select>
         </div>
       </div>
 
@@ -1794,6 +2304,7 @@ function PartnersTab({
                 "Email",
                 "Plan Status",
                 "Join Date",
+                "Partner Type",
                 "Status",
                 "Actions",
               ].map((h) => (
@@ -1941,6 +2452,37 @@ function PartnersTab({
                   }}
                 >
                   {p.date}
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  {p.partnerType ? (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        padding: "3px 8px",
+                        borderRadius: "20px",
+                        background:
+                          p.partnerType === "Travel Agent"
+                            ? "#dbeafe"
+                            : p.partnerType === "Hotel Partner"
+                              ? "#dcfce7"
+                              : "#ede9fe",
+                        color:
+                          p.partnerType === "Travel Agent"
+                            ? "#1e3a8a"
+                            : p.partnerType === "Hotel Partner"
+                              ? "#166534"
+                              : "#7c3aed",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {p.partnerType}
+                    </span>
+                  ) : (
+                    <span style={{ color: "#d1d5db", fontSize: "12px" }}>
+                      —
+                    </span>
+                  )}
                 </td>
                 <td style={{ padding: "12px 16px" }}>
                   <StatusBadge
@@ -2129,10 +2671,25 @@ function PlansTab({
       "Expiry Date": p.expiryDate,
       "Payment Status": p.paymentStatus,
     }));
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Partners");
-    XLSX.writeFile(wb, "travelnworld-partners-data.xlsx");
+    const headers = Object.keys(exportData[0] || {});
+    const csvRows = [
+      headers.join(","),
+      ...exportData.map((row) =>
+        headers
+          .map(
+            (h) =>
+              `"${String((row as Record<string, string>)[h] || "").replace(/"/g, '""')}"`,
+          )
+          .join(","),
+      ),
+    ];
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "travelnworld-partners-data.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const toggle = (id: number) =>
@@ -2669,6 +3226,472 @@ const bookingStatusColors: Record<string, { bg: string; color: string }> = {
   Cancelled: { bg: "#fee2e2", color: "#991b1b" },
 };
 
+function HotelBookingsTab({
+  bookings,
+  setBookings,
+}: {
+  bookings: HotelBooking[];
+  setBookings: (b: HotelBooking[]) => void;
+}) {
+  const [search, setSearch] = useState("");
+
+  const filtered = bookings.filter(
+    (b) =>
+      b.customerName.toLowerCase().includes(search.toLowerCase()) ||
+      b.hotelName.toLowerCase().includes(search.toLowerCase()) ||
+      b.city.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const cycleStatus = (id: number) => {
+    const order: HotelBooking["status"][] = [
+      "Pending",
+      "Confirmed",
+      "Cancelled",
+    ];
+    setBookings(
+      bookings.map((b) =>
+        b.id === id
+          ? { ...b, status: order[(order.indexOf(b.status) + 1) % 3] }
+          : b,
+      ),
+    );
+  };
+
+  return (
+    <div data-ocid="admin.hotel-bookings.section">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: "Poppins, sans-serif",
+            fontWeight: 700,
+            fontSize: "22px",
+            color: "#111827",
+          }}
+        >
+          Hotel Bookings
+        </h2>
+        <div style={{ position: "relative" }}>
+          <Search
+            size={16}
+            style={{
+              position: "absolute",
+              left: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "#9ca3af",
+            }}
+          />
+          <input
+            data-ocid="hotel-bookings.search_input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search hotel bookings..."
+            style={{
+              paddingLeft: "34px",
+              paddingRight: "12px",
+              height: "38px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              fontSize: "14px",
+              outline: "none",
+              width: "240px",
+            }}
+          />
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: "12px",
+          border: "1px solid #e5e7eb",
+          overflow: "auto",
+        }}
+      >
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "14px",
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                background: "#f8fafc",
+                borderBottom: "1px solid #e5e7eb",
+              }}
+            >
+              {[
+                "Customer Name",
+                "Hotel Name",
+                "City",
+                "Room Type",
+                "Check-in",
+                "Check-out",
+                "Booking Value",
+                "Status",
+                "Action",
+              ].map((h) => (
+                <th
+                  key={h}
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "left",
+                    fontWeight: 600,
+                    color: "#374151",
+                    fontSize: "12px",
+                    textTransform: "uppercase",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr>
+                <td
+                  colSpan={9}
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "#9ca3af",
+                  }}
+                  data-ocid="hotel-bookings.empty_state"
+                >
+                  No hotel bookings found.
+                </td>
+              </tr>
+            )}
+            {filtered.map((b, idx) => (
+              <tr
+                key={b.id}
+                data-ocid={`hotel-bookings.row.${idx + 1}`}
+                style={{ borderBottom: "1px solid #f3f4f6" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#f9fafb";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    fontWeight: 600,
+                    color: "#111827",
+                  }}
+                >
+                  {b.customerName}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {b.hotelName}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {b.city}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {b.roomType}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    color: "#374151",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {b.checkIn}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    color: "#374151",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {b.checkOut}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    fontWeight: 600,
+                    color: "#111827",
+                  }}
+                >
+                  {b.bookingValue}
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  <StatusBadge
+                    status={b.status}
+                    colors={bookingStatusColors[b.status]}
+                  />
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  <button
+                    type="button"
+                    data-ocid={`hotel-bookings.status.button.${idx + 1}`}
+                    onClick={() => cycleStatus(b.id)}
+                    style={{
+                      background: "#f3f4f6",
+                      color: "#374151",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "5px 10px",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Change Status
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function DmcBookingsTab({
+  bookings,
+  setBookings,
+}: {
+  bookings: DmcBooking[];
+  setBookings: (b: DmcBooking[]) => void;
+}) {
+  const [search, setSearch] = useState("");
+
+  const filtered = bookings.filter(
+    (b) =>
+      b.customerName.toLowerCase().includes(search.toLowerCase()) ||
+      b.destination.toLowerCase().includes(search.toLowerCase()) ||
+      b.serviceType.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const cycleStatus = (id: number) => {
+    const order: DmcBooking["status"][] = ["Pending", "Confirmed", "Cancelled"];
+    setBookings(
+      bookings.map((b) =>
+        b.id === id
+          ? { ...b, status: order[(order.indexOf(b.status) + 1) % 3] }
+          : b,
+      ),
+    );
+  };
+
+  return (
+    <div data-ocid="admin.dmc-bookings.section">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: "Poppins, sans-serif",
+            fontWeight: 700,
+            fontSize: "22px",
+            color: "#111827",
+          }}
+        >
+          DMC Service Bookings
+        </h2>
+        <div style={{ position: "relative" }}>
+          <Search
+            size={16}
+            style={{
+              position: "absolute",
+              left: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "#9ca3af",
+            }}
+          />
+          <input
+            data-ocid="dmc-bookings.search_input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search DMC bookings..."
+            style={{
+              paddingLeft: "34px",
+              paddingRight: "12px",
+              height: "38px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              fontSize: "14px",
+              outline: "none",
+              width: "240px",
+            }}
+          />
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: "12px",
+          border: "1px solid #e5e7eb",
+          overflow: "auto",
+        }}
+      >
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "14px",
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                background: "#f8fafc",
+                borderBottom: "1px solid #e5e7eb",
+              }}
+            >
+              {[
+                "Customer Name",
+                "Destination",
+                "DMC Partner",
+                "Service Type",
+                "Travel Date",
+                "Booking Value",
+                "Status",
+                "Action",
+              ].map((h) => (
+                <th
+                  key={h}
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "left",
+                    fontWeight: 600,
+                    color: "#374151",
+                    fontSize: "12px",
+                    textTransform: "uppercase",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr>
+                <td
+                  colSpan={8}
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "#9ca3af",
+                  }}
+                  data-ocid="dmc-bookings.empty_state"
+                >
+                  No DMC bookings found.
+                </td>
+              </tr>
+            )}
+            {filtered.map((b, idx) => (
+              <tr
+                key={b.id}
+                data-ocid={`dmc-bookings.row.${idx + 1}`}
+                style={{ borderBottom: "1px solid #f3f4f6" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#f9fafb";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    fontWeight: 600,
+                    color: "#111827",
+                  }}
+                >
+                  {b.customerName}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {b.destination}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {b.dmcPartner}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {b.serviceType}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    color: "#374151",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {b.travelDate}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    fontWeight: 600,
+                    color: "#111827",
+                  }}
+                >
+                  {b.bookingValue}
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  <StatusBadge
+                    status={b.status}
+                    colors={bookingStatusColors[b.status]}
+                  />
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  <button
+                    type="button"
+                    data-ocid={`dmc-bookings.status.button.${idx + 1}`}
+                    onClick={() => cycleStatus(b.id)}
+                    style={{
+                      background: "#f3f4f6",
+                      color: "#374151",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "5px 10px",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Change Status
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function BookingsTab() {
   const [bookings, setBookings] = useState<Booking[]>(SAMPLE_BOOKINGS);
 
@@ -2873,6 +3896,9 @@ export default function AdminDashboard() {
   const [inquiries, setInquiries] =
     useState<BookingInquiry[]>(INITIAL_INQUIRIES);
   const [plans, setPlans] = useState<PartnerPlan[]>(INITIAL_PLANS);
+  const [hotelBookings, setHotelBookings] =
+    useState<HotelBooking[]>(HOTEL_BOOKINGS);
+  const [dmcBookings, setDmcBookings] = useState<DmcBooking[]>(DMC_BOOKINGS);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("tnw_admin_auth");
@@ -3045,6 +4071,18 @@ export default function AdminDashboard() {
             <PlansTab plans={plans} setPlans={setPlans} />
           )}
           {activeTab === "bookings" && <BookingsTab />}
+          {activeTab === "hotel-bookings" && (
+            <HotelBookingsTab
+              bookings={hotelBookings}
+              setBookings={setHotelBookings}
+            />
+          )}
+          {activeTab === "dmc-bookings" && (
+            <DmcBookingsTab
+              bookings={dmcBookings}
+              setBookings={setDmcBookings}
+            />
+          )}
         </main>
       </div>
     </div>
