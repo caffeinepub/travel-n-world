@@ -97,7 +97,7 @@ function DestCard({
   return (
     <div
       data-ocid={`destinations.card.${index + 1}`}
-      className="reveal bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group flex flex-col"
+      className="reveal bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl hover:shadow-blue-100 transition-all duration-300 hover:-translate-y-2 cursor-pointer group flex flex-col"
     >
       {/* Image */}
       <div className="relative overflow-hidden" style={{ height: "220px" }}>
@@ -112,7 +112,7 @@ function DestCard({
           <img
             src={dest.img}
             alt={dest.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             onError={() => setImgError(true)}
           />
         )}
@@ -167,7 +167,7 @@ function DestCard({
         {/* CTA */}
         <Button
           asChild
-          className="w-full rounded-xl bg-[#1E40AF] hover:bg-blue-700 text-white font-semibold h-10 text-sm"
+          className="w-full rounded-xl bg-[#1E40AF] hover:bg-blue-800 active:bg-blue-900 text-white font-semibold h-10 text-sm transition-all duration-300 hover:shadow-md"
         >
           <Link to="/partner">Enquire Now</Link>
         </Button>

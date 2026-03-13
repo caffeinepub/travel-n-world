@@ -172,15 +172,15 @@ export default function Services() {
               <div
                 key={service.title}
                 data-ocid={`services.card.${i + 1}`}
-                className="reveal bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-7 group flex flex-col"
+                className="reveal bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-2xl hover:shadow-blue-50 transition-all duration-300 hover:-translate-y-2 cursor-pointer p-7 group flex flex-col"
               >
                 {/* Icon + Badge row */}
                 <div className="flex items-start justify-between mb-5">
                   <div
-                    className={`w-14 h-14 ${service.iconBg} rounded-2xl flex items-center justify-center ${service.hoverBg} transition-colors`}
+                    className={`w-14 h-14 ${service.iconBg} rounded-2xl flex items-center justify-center ${service.hoverBg} transition-colors duration-300`}
                   >
                     <service.icon
-                      className={`h-6 w-6 ${service.iconColor} ${service.hoverIcon} transition-colors`}
+                      className={`h-6 w-6 ${service.iconColor} ${service.hoverIcon} transition-colors duration-300`}
                     />
                   </div>
                   <span
@@ -266,7 +266,7 @@ export default function Services() {
             <Button
               asChild
               size="lg"
-              className="bg-[#1E40AF] hover:bg-blue-700 text-white font-semibold h-14 px-10 rounded-2xl"
+              className="bg-[#1E40AF] hover:bg-blue-800 active:bg-blue-900 text-white font-semibold h-14 px-10 rounded-2xl transition-all duration-300 hover:shadow-lg"
             >
               <Link to="/partner">Get Started Today</Link>
             </Button>
