@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Link } from "@tanstack/react-router";
-import { Globe, MapPin } from "lucide-react";
+import { Clock, Globe, MapPin, Tag } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const destinations = [
@@ -12,74 +12,169 @@ const destinations = [
     country: "UAE",
     img: "/assets/generated/dest-dubai.dim_600x400.jpg",
     tag: "Most Popular",
+    tagColor: "bg-[#1E40AF]",
     category: "asia",
-    desc: "Experience the ultimate luxury in the City of Gold. Iconic Burj Khalifa, desert safaris, world-class shopping, and stunning waterfront views.",
+    desc: "Experience ultimate luxury in the City of Gold — iconic Burj Khalifa, desert safaris, world-class shopping, and stunning waterfront views.",
     nights: "4N/5D",
-    price: "From ₹45,000",
+    price: "₹45,000",
   },
   {
     name: "Thailand",
     country: "Asia",
     img: "/assets/generated/dest-thailand.dim_600x400.jpg",
     tag: "Best Seller",
+    tagColor: "bg-[#E53935]",
     category: "asia",
-    desc: "Tropical beaches, ancient temples, vibrant nightlife, and delicious street food. Thailand has something magical for every kind of traveler.",
+    desc: "Tropical beaches, ancient temples, vibrant nightlife, and delicious street food. Thailand has something magical for every traveler.",
     nights: "5N/6D",
-    price: "From ₹38,000",
+    price: "₹38,000",
   },
   {
     name: "Singapore",
     country: "Asia",
     img: "/assets/generated/dest-singapore.dim_600x400.jpg",
     tag: "Trending",
+    tagColor: "bg-emerald-600",
     category: "asia",
-    desc: "The futuristic city-state that blends cultures seamlessly. Gardens by the Bay, Marina Bay Sands, and incredible food courts await.",
+    desc: "The futuristic city-state blending cultures seamlessly. Gardens by the Bay, Marina Bay Sands, and incredible cuisine await.",
     nights: "4N/5D",
-    price: "From ₹52,000",
+    price: "₹52,000",
   },
   {
     name: "Maldives",
     country: "Indian Ocean",
     img: "/assets/generated/dest-maldives.dim_600x400.jpg",
     tag: "Luxury",
+    tagColor: "bg-purple-600",
     category: "asia",
-    desc: "The ultimate luxury escape with overwater villas, crystal-clear lagoons, pristine coral reefs, and absolute seclusion from the world.",
+    desc: "The ultimate luxury escape with overwater villas, crystal-clear lagoons, pristine coral reefs, and absolute seclusion.",
     nights: "3N/4D",
-    price: "From ₹80,000",
+    price: "₹80,000",
   },
   {
     name: "Kashmir",
     country: "India",
     img: "/assets/generated/dest-kashmir.dim_600x400.jpg",
     tag: "Domestic",
+    tagColor: "bg-orange-500",
     category: "domestic",
-    desc: "Paradise on Earth. Dal Lake shikaras, snow-capped Himalayan peaks, Mughal gardens, and the warmth of Kashmiri hospitality.",
+    desc: "Paradise on Earth — Dal Lake shikaras, snow-capped Himalayan peaks, Mughal gardens, and warm Kashmiri hospitality.",
     nights: "5N/6D",
-    price: "From ₹22,000",
+    price: "₹22,000",
   },
   {
     name: "Bali",
     country: "Indonesia",
     img: "/assets/generated/dest-bali.dim_600x400.jpg",
     tag: "Exotic",
+    tagColor: "bg-teal-600",
     category: "asia",
-    desc: "The Island of the Gods offers terraced rice paddies, ancient temples, vibrant arts scene, and some of the world's best surf beaches.",
+    desc: "The Island of the Gods — terraced rice paddies, ancient temples, vibrant arts scene, and world-class surf beaches.",
     nights: "5N/6D",
-    price: "From ₹42,000",
+    price: "₹42,000",
   },
   {
     name: "Europe",
     country: "Multi-Country",
     img: "/assets/generated/dest-europe.dim_600x400.jpg",
     tag: "Grand Tour",
+    tagColor: "bg-[#1E40AF]",
     category: "europe",
     desc: "From Santorini's blue domes to Paris's Eiffel Tower, Swiss Alps to Venice canals — a European journey is the trip of a lifetime.",
     nights: "10N/11D",
-    price: "From ₹1,20,000",
+    price: "₹1,20,000",
   },
 ];
 
 type Filter = "all" | "asia" | "europe" | "domestic";
+
+function DestCard({
+  dest,
+  index,
+}: { dest: (typeof destinations)[0]; index: number }) {
+  const [imgError, setImgError] = useState(false);
+
+  return (
+    <div
+      data-ocid={`destinations.card.${index + 1}`}
+      className="reveal bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group flex flex-col"
+    >
+      {/* Image */}
+      <div className="relative overflow-hidden" style={{ height: "220px" }}>
+        {imgError ? (
+          <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex flex-col items-center justify-center">
+            <Globe className="h-10 w-10 text-blue-400 mb-2" />
+            <span className="text-blue-500 text-sm font-medium">
+              {dest.name}
+            </span>
+          </div>
+        ) : (
+          <img
+            src={dest.img}
+            alt={dest.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={() => setImgError(true)}
+          />
+        )}
+        {/* Soft gradient overlay — bottom only, lighter */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)",
+          }}
+        />
+        {/* Tag badge */}
+        <div className="absolute top-3 left-3">
+          <span
+            className={`px-2.5 py-1 text-white text-xs font-bold rounded-full ${dest.tagColor}`}
+          >
+            {dest.tag}
+          </span>
+        </div>
+        {/* Name + Location overlay at bottom of image */}
+        <div className="absolute bottom-3 left-4">
+          <div className="font-bold text-xl text-white drop-shadow">
+            {dest.name}
+          </div>
+          <div className="flex items-center gap-1 text-xs text-white/80 mt-0.5">
+            <MapPin className="h-3 w-3" /> {dest.country}
+          </div>
+        </div>
+      </div>
+
+      {/* Card Body */}
+      <div className="p-4 flex flex-col flex-1">
+        {/* Duration & Price row */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+            <Clock className="h-3 w-3" />
+            {dest.nights}
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-gray-400">Starting from</div>
+            <div className="font-bold text-[#1E40AF] text-base">
+              {dest.price}
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p className="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-4 flex-1">
+          {dest.desc}
+        </p>
+
+        {/* CTA */}
+        <Button
+          asChild
+          className="w-full rounded-xl bg-[#1E40AF] hover:bg-blue-700 text-white font-semibold h-10 text-sm"
+        >
+          <Link to="/partner">Enquire Now</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function Destinations() {
   const [filter, setFilter] = useState<Filter>("all");
@@ -101,18 +196,19 @@ export default function Destinations() {
         breadcrumb="Destinations"
       />
 
-      <section className="section-padding bg-white">
+      <section className="section-padding bg-gray-50">
         <div className="container-custom">
-          <div className="flex justify-center mb-12 reveal">
+          {/* Filter Tabs */}
+          <div className="flex justify-center mb-10 reveal">
             <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-              <TabsList className="bg-royal-50 p-1 rounded-2xl h-auto gap-1">
+              <TabsList className="bg-white border border-gray-200 p-1 rounded-2xl h-auto gap-1 shadow-sm">
                 {(["all", "asia", "europe", "domestic"] as Filter[]).map(
                   (f) => (
                     <TabsTrigger
                       key={f}
                       value={f}
                       data-ocid={`destinations.${f}.tab`}
-                      className="rounded-xl px-5 py-2.5 text-sm font-medium capitalize data-[state=active]:bg-primary data-[state=active]:text-white"
+                      className="rounded-xl px-5 py-2.5 text-sm font-medium capitalize data-[state=active]:bg-[#1E40AF] data-[state=active]:text-white"
                     >
                       {f === "all"
                         ? "All"
@@ -128,81 +224,19 @@ export default function Destinations() {
             </Tabs>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((dest, i) => (
-              <div
-                key={dest.name}
-                data-ocid={`destinations.card.${i + 1}`}
-                className="dest-card reveal bg-white rounded-3xl overflow-hidden border border-border shadow-card card-hover group"
-              >
-                <div
-                  className="relative overflow-hidden"
-                  style={{ aspectRatio: "3/2" }}
-                >
-                  <img
-                    src={dest.img}
-                    alt={dest.name}
-                    className="dest-img w-full h-full object-cover"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "linear-gradient(to top, rgba(0,0,0,0.5), transparent)",
-                    }}
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 text-white text-xs font-bold rounded-full bg-[#1E40AF]">
-                      {dest.tag}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-                    <div>
-                      <div className="font-bold text-xl text-white">
-                        {dest.name}
-                      </div>
-                      <div
-                        className="flex items-center gap-1 text-xs mt-0.5"
-                        style={{ color: "rgba(255,255,255,0.75)" }}
-                      >
-                        <MapPin className="h-3 w-3" /> {dest.country}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div
-                        className="text-xs"
-                        style={{ color: "rgba(255,255,255,0.8)" }}
-                      >
-                        {dest.nights}
-                      </div>
-                      <div className="font-semibold text-white text-sm">
-                        {dest.price}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-2">
-                    {dest.desc}
-                  </p>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full rounded-xl border-primary text-primary hover:bg-primary hover:text-white font-medium"
-                  >
-                    <Link to="/partner">Enquire Now</Link>
-                  </Button>
-                </div>
-              </div>
+              <DestCard key={dest.name} dest={dest} index={i} />
             ))}
           </div>
 
           {filtered.length === 0 && (
             <div
               data-ocid="destinations.empty_state"
-              className="text-center py-20 text-muted-foreground"
+              className="text-center py-20 text-gray-400"
             >
-              <Globe className="h-12 w-12 mx-auto mb-4 text-royal-200" />
+              <Globe className="h-12 w-12 mx-auto mb-4 text-blue-200" />
               <p className="text-lg">No destinations in this category yet.</p>
             </div>
           )}

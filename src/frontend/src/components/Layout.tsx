@@ -7,11 +7,21 @@ import WhatsAppButton from "./WhatsAppButton";
 
 export default function Layout() {
   const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll to top on every route change
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 0);
   }, [location.pathname]);
+
+  if (isAdminRoute) {
+    return (
+      <>
+        <Outlet />
+        <Toaster richColors position="top-right" />
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">

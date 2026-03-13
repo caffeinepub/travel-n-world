@@ -17,6 +17,7 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const router = useRouter();
   const currentPath = router.state.location.pathname;
 
@@ -47,11 +48,18 @@ export default function Navbar() {
             className="flex items-center gap-3 group flex-shrink-0"
             data-ocid="nav.link.1"
           >
-            <img
-              src="/assets/uploads/Screenshot-2026-03-12-155625-1.png"
-              alt="Travel N World"
-              className="h-10 w-auto object-contain"
-            />
+            {logoError ? (
+              <span className="font-bold text-xl text-primary font-display">
+                Travel N World
+              </span>
+            ) : (
+              <img
+                src="/assets/uploads/logo-1.png"
+                alt="Travel N World"
+                className="h-10 w-auto object-contain"
+                onError={() => setLogoError(true)}
+              />
+            )}
           </Link>
 
           {/* ── Desktop Nav ── */}

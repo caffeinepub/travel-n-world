@@ -10,7 +10,7 @@ export default function PageHero({
   breadcrumb,
 }: PageHeroProps) {
   return (
-    <section className="relative pt-32 pb-20 md:pt-40 md:pb-24 blue-gradient overflow-hidden">
+    <section className="relative pt-10 pb-12 md:pt-14 md:pb-16 blue-gradient overflow-hidden">
       {/* Geometric decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div

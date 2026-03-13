@@ -10,7 +10,17 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import { MapPin, Phone, Search, ShieldCheck, Star } from "lucide-react";
+import {
+  BookCheck,
+  MapPin,
+  Phone,
+  Plane,
+  Search,
+  ShieldCheck,
+  Star,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 interface Agency {
@@ -1900,13 +1910,6 @@ const LOGO_GRADIENTS = [
   "linear-gradient(135deg, #134E4A 0%, #5EEAD4 100%)",
 ];
 
-function maskPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length < 10) return phone;
-  const last10 = digits.slice(-10);
-  return `+91 ${last10.slice(0, 2)}XXXX${last10.slice(6)}`;
-}
-
 function getInitials(name: string): string {
   const words = name.trim().split(/\s+/);
   if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
@@ -1932,6 +1935,13 @@ function VerifiedBadge() {
   );
 }
 
+function getMaskedPhone(id: number): string {
+  const prefixes = ["98", "88", "97", "96", "99", "87", "78", "90"];
+  const prefix = prefixes[id % prefixes.length];
+  const suffix = String(1000 + ((id * 137) % 9000)).slice(0, 4);
+  return `+91 ${prefix}XXXX${suffix}`;
+}
+
 interface AgencyCardProps {
   agency: Agency;
   index: number;
@@ -1942,21 +1952,27 @@ function AgencyCard({ agency, index }: AgencyCardProps) {
   return (
     <div
       data-ocid={`partners.card.${index + 1}`}
-      className="group relative bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+      className="group relative bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden min-h-[340px]"
     >
       {/* Blue top border reveal on hover */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-700 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
 
-      <div className="p-5">
+      <div className="p-5 flex flex-col h-full">
         {/* Top row: avatar + verified badge */}
         <div className="flex items-start justify-between mb-4">
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0 ring-2 ring-white"
-            style={{
-              background: getLogoGradient(agency.name),
-            }}
-          >
-            {getInitials(agency.name)}
+          <div className="relative flex-shrink-0">
+            <div
+              className="w-[72px] h-[72px] rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-md ring-2 ring-white flex-shrink-0"
+              style={{
+                background: getLogoGradient(agency.name),
+              }}
+            >
+              {getInitials(agency.name)}
+            </div>
+            {/* Travel icon accent badge */}
+            <div className="absolute bottom-0 right-0 w-5 h-5 bg-blue-700 rounded-full border-2 border-white flex items-center justify-center">
+              <Plane className="h-3 w-3 text-white" />
+            </div>
           </div>
           <VerifiedBadge />
         </div>
@@ -1988,40 +2004,43 @@ function AgencyCard({ agency, index }: AgencyCardProps) {
           {agency.speciality}
         </p>
 
-        {/* Bottom row */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        {/* Rating + experience row */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100 mb-3">
           <div className="flex items-center gap-1">
             <Star className="h-3.5 w-3.5 fill-[#C9A227] text-[#C9A227]" />
             <span className="font-bold text-sm text-gray-800">
               {agency.rating}
             </span>
-            <span className="text-gray-400 text-xs">({agency.reviews})</span>
+            <span className="text-gray-400 text-xs">
+              ({agency.reviews} reviews)
+            </span>
           </div>
           <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full">
             {agency.yearsInBusiness} yrs exp
           </span>
         </div>
 
-        {/* Phone row */}
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+        {/* Masked phone */}
+        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg mb-3">
           <Phone className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-          <span className="text-sm text-gray-600 font-medium">
-            {maskPhone(agency.phone)}
+          <span className="text-gray-500 text-xs font-mono">
+            {getMaskedPhone(agency.id)}
           </span>
         </div>
-
-        {/* View Contact button */}
-        <button
-          type="button"
-          data-ocid={`partners.card.view_contact.${index + 1}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowContactModal(true);
-          }}
-          className="mt-3 w-full py-2 px-4 rounded-xl bg-[#1E40AF] hover:bg-[#1E3A8A] text-white text-sm font-semibold transition-colors duration-200"
-        >
-          View Contact
-        </button>
+        {/* View Contact button — pushed to bottom */}
+        <div className="mt-auto">
+          <button
+            type="button"
+            data-ocid={`partners.card.view_profile.${index + 1}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowContactModal(true);
+            }}
+            className="w-full py-2 px-4 rounded-xl bg-[#1E40AF] hover:bg-[#1E3A8A] text-white text-sm font-semibold transition-colors duration-200"
+          >
+            View Contact
+          </button>
+        </div>
       </div>
 
       {/* Contact Modal */}
@@ -2040,13 +2059,14 @@ function AgencyCard({ agency, index }: AgencyCardProps) {
             onKeyDown={(e) => e.stopPropagation()}
           >
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Phone className="h-7 w-7 text-blue-700" />
+              <Plane className="h-7 w-7 text-blue-700" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Contact Details
+              Partner Profile
             </h3>
             <p className="text-gray-600 text-sm mb-6">
-              Register as a travel partner to access full contact details.
+              Register as a travel partner to access full contact details and
+              partner profiles.
             </p>
             <a
               href="/register"
@@ -2139,7 +2159,7 @@ export default function Partners() {
       {/* HEADER */}
       <section
         data-ocid="partners.section"
-        className="relative pt-32 pb-16 overflow-hidden"
+        className="relative pt-4 pb-12 overflow-hidden"
       >
         <div className="blue-gradient absolute inset-0" />
         <div
@@ -2151,7 +2171,7 @@ export default function Partners() {
         />
         <div className="container-custom relative z-10 text-center">
           <div
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full mb-6 animate-fade-in"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full mb-5 animate-fade-in"
             style={{
               background: "rgba(255,255,255,0.15)",
               backdropFilter: "blur(8px)",
@@ -2162,8 +2182,8 @@ export default function Partners() {
               100% Verified & Background-Checked
             </span>
           </div>
-          <h1 className="font-bold text-4xl md:text-5xl lg:text-6xl text-white mb-5 animate-fade-up">
-            Verified Travel Partners
+          <h1 className="font-bold text-4xl md:text-5xl lg:text-6xl text-white mb-4 animate-fade-up">
+            Verified Travel Partners Across India
           </h1>
           <p
             className="text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-fade-up"
@@ -2172,30 +2192,51 @@ export default function Partners() {
             Discover 150+ thoroughly vetted travel agencies trusted by thousands
             of travelers across India
           </p>
+
+          {/* Stats Cards Row */}
           <div
-            className="inline-flex flex-wrap items-center justify-center gap-2 md:gap-6 px-8 py-4 rounded-2xl animate-fade-up"
-            style={{
-              background: "rgba(255,255,255,0.12)",
-              backdropFilter: "blur(8px)",
-              animationDelay: "0.3s",
-            }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto animate-fade-up"
+            style={{ animationDelay: "0.3s" }}
           >
             {[
-              { num: "150", label: "Verified Agencies" },
-              { num: "12", label: "Cities" },
-              { num: "8", label: "Categories" },
-            ].map((s, i) => (
-              <div key={s.label} className="flex items-center gap-2">
-                {i > 0 && (
-                  <span className="hidden md:block w-px h-6 bg-white/20" />
-                )}
-                <span
-                  className="font-bold text-2xl"
-                  style={{ color: "#f59e0b" }}
+              {
+                icon: <Users className="h-7 w-7 text-white" />,
+                num: "150+",
+                label: "Verified Travel Partners",
+                bg: "rgba(255,255,255,0.15)",
+              },
+              {
+                icon: <TrendingUp className="h-7 w-7 text-white" />,
+                num: "12,000+",
+                label: "Travel Leads Generated",
+                bg: "rgba(255,255,255,0.12)",
+              },
+              {
+                icon: <BookCheck className="h-7 w-7 text-white" />,
+                num: "5,000+",
+                label: "Confirmed Bookings",
+                bg: "rgba(255,255,255,0.12)",
+              },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="flex flex-col items-center gap-2 px-6 py-5 rounded-2xl"
+                style={{
+                  background: s.bg,
+                  backdropFilter: "blur(8px)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                <div
+                  className="p-2 rounded-full"
+                  style={{ background: "rgba(255,255,255,0.15)" }}
                 >
-                  {s.num}
+                  {s.icon}
+                </div>
+                <span className="font-bold text-3xl text-white">{s.num}</span>
+                <span className="text-white/80 text-sm font-medium">
+                  {s.label}
                 </span>
-                <span className="text-white/80 text-sm">{s.label}</span>
               </div>
             ))}
           </div>
@@ -2203,7 +2244,7 @@ export default function Partners() {
       </section>
 
       {/* SEARCH + FILTER BAR */}
-      <section className="bg-white sticky top-20 z-30 border-b border-gray-200 shadow-sm">
+      <section className="bg-white sticky top-16 md:top-[72px] z-30 border-b border-gray-200 shadow-sm">
         <div className="container-custom py-4">
           {/* Search bar */}
           <div className="relative mb-3 max-w-2xl mx-auto md:mx-0">

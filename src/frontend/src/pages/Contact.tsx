@@ -12,12 +12,12 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Our Office",
-    lines: ["123 Travel House, Connaught Place", "New Delhi – 110001, India"],
+    lines: ["Dwarka Mor, Vipin Garden, Nawada", "Delhi – 110059, India"],
   },
   {
     icon: Phone,
     title: "Phone",
-    lines: ["+91 99999 99999", "+91 88888 88888"],
+    lines: ["+91 7290087054"],
   },
   {
     icon: Mail,
@@ -221,8 +221,8 @@ export default function Contact() {
                 Find Us Here
               </h2>
               <p className="text-muted-foreground text-sm mb-6">
-                We're located in the heart of New Delhi, easily accessible by
-                metro and road.
+                We're located in Dwarka Mor, Nawada, Delhi – easily accessible
+                by metro and road.
               </p>
               <div
                 className="blue-gradient rounded-3xl overflow-hidden flex flex-col items-center justify-center relative"
@@ -249,17 +249,22 @@ export default function Contact() {
                     className="text-sm"
                     style={{ color: "rgba(255,255,255,0.7)" }}
                   >
-                    123 Travel House
+                    Dwarka Mor, Vipin Garden
                   </div>
                   <div
                     className="text-sm"
                     style={{ color: "rgba(255,255,255,0.7)" }}
                   >
-                    Connaught Place, New Delhi
+                    Nawada, Delhi – 110059
                   </div>
-                  <div className="mt-6 px-5 py-2.5 bg-[#1E40AF] rounded-xl text-white text-sm font-semibold inline-block cursor-pointer hover:bg-[#1E3A8A] transition-colors">
+                  <a
+                    href="https://maps.google.com/?q=Dwarka+Mor,+Vipin+Garden,+Nawada,+Delhi+110059"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-6 px-5 py-2.5 bg-[#1E40AF] rounded-xl text-white text-sm font-semibold inline-block cursor-pointer hover:bg-[#1E3A8A] transition-colors"
+                  >
                     Get Directions
-                  </div>
+                  </a>
                 </div>
               </div>
             </div>

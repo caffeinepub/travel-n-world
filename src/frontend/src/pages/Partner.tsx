@@ -63,7 +63,7 @@ export default function Partner() {
     phone: "",
     email: "",
     city: "",
-    businessType: "",
+    experience: "",
   });
   const mutation = useSubmitPartnerRegistration();
 
@@ -74,8 +74,8 @@ export default function Partner() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.businessType) {
-      toast.error("Please select your business type");
+    if (!form.experience) {
+      toast.error("Please select your years of experience");
       return;
     }
     try {
@@ -87,7 +87,7 @@ export default function Partner() {
         phone: "",
         email: "",
         city: "",
-        businessType: "",
+        experience: "",
       });
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -98,7 +98,7 @@ export default function Partner() {
     <div>
       <PageHero
         title="Become a Partner"
-        subtitle="Join India's fastest-growing B2B travel network \u2014 free to join, instant activation"
+        subtitle="Join India\u2019s fastest-growing B2B travel network \u2014 free to join, instant activation"
         breadcrumb="Partner Registration"
       />
 
@@ -112,7 +112,7 @@ export default function Partner() {
               </h2>
               <p className="text-muted-foreground mb-8 text-sm leading-relaxed">
                 Thousands of travel agents across India trust Travel N World to
-                power their business. Here's what you get:
+                power their business. Here\u2019s what you get:
               </p>
               <div className="space-y-4">
                 {benefits.map((b, i) => (
@@ -270,38 +270,32 @@ export default function Partner() {
                   </div>
                   <div>
                     <label
-                      htmlFor="p-btype"
+                      htmlFor="p-exp"
                       className="text-sm font-medium text-foreground mb-2 block"
                     >
-                      Business Type *
+                      Years of Experience *
                     </label>
                     <Select
-                      value={form.businessType}
+                      value={form.experience}
                       onValueChange={(v) =>
-                        setForm((p) => ({ ...p, businessType: v }))
+                        setForm((p) => ({ ...p, experience: v }))
                       }
                     >
                       <SelectTrigger
-                        id="p-btype"
-                        data-ocid="partner.businesstype.select"
+                        id="p-exp"
+                        data-ocid="partner.experience.select"
                         className="rounded-xl h-11"
                       >
-                        <SelectValue placeholder="Select business type" />
+                        <SelectValue placeholder="Select experience" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Tour Operator">
-                          Tour Operator
+                        <SelectItem value="Less than 1 year">
+                          Less than 1 year
                         </SelectItem>
-                        <SelectItem value="Travel Agent">
-                          Travel Agent
-                        </SelectItem>
-                        <SelectItem value="Corporate Travel">
-                          Corporate Travel
-                        </SelectItem>
-                        <SelectItem value="Online Travel Agency">
-                          Online Travel Agency
-                        </SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        <SelectItem value="1-2 years">1–2 years</SelectItem>
+                        <SelectItem value="3-5 years">3–5 years</SelectItem>
+                        <SelectItem value="6-10 years">6–10 years</SelectItem>
+                        <SelectItem value="10+ years">10+ years</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

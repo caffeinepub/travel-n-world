@@ -28,6 +28,7 @@ import {
   Globe2,
   Headphones,
   Loader2,
+  Mail,
   MapPin,
   Plane,
   ShieldCheck,
@@ -41,63 +42,6 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 // ── useCountUp hook ──────────────────────────────────────────────────────────
-function useCountUp(target: number, duration = 1500) {
-  const [count, setCount] = useState(0);
-  const started = useRef(false);
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !started.current) {
-          started.current = true;
-          const start = performance.now();
-          const step = (now: number) => {
-            const progress = Math.min((now - start) / duration, 1);
-            const eased = 1 - (1 - progress) ** 3;
-            setCount(Math.floor(eased * target));
-            if (progress < 1) requestAnimationFrame(step);
-            else setCount(target);
-          };
-          requestAnimationFrame(step);
-        }
-      },
-      { threshold: 0.4 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [target, duration]);
-
-  return { count, ref };
-}
-
-// ── StatCounter component ────────────────────────────────────────────────────
-function StatCounter({
-  target,
-  suffix,
-  label,
-  ocid,
-}: {
-  target: number;
-  suffix: string;
-  label: string;
-  ocid: string;
-}) {
-  const { count, ref } = useCountUp(target);
-  return (
-    <div ref={ref} data-ocid={ocid} className="text-center">
-      <div className="font-bold text-3xl md:text-4xl text-primary">
-        {count.toLocaleString()}
-        {suffix}
-      </div>
-      <div className="text-muted-foreground text-sm mt-1 font-medium">
-        {label}
-      </div>
-    </div>
-  );
-}
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 const services = [
@@ -1095,7 +1039,7 @@ export default function Home() {
     phone: "",
     email: "",
     city: "",
-    businessType: "",
+    experience: "",
   });
 
   const partnerMutation = useSubmitPartnerRegistration();
@@ -1116,8 +1060,8 @@ export default function Home() {
 
   const handlePartnerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!partnerForm.businessType) {
-      toast.error("Please select a business type");
+    if (!partnerForm.experience) {
+      toast.error("Please select your years of experience");
       return;
     }
     try {
@@ -1131,7 +1075,7 @@ export default function Home() {
         phone: "",
         email: "",
         city: "",
-        businessType: "",
+        experience: "",
       });
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -1194,86 +1138,106 @@ export default function Home() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* TRUST STATISTICS BAR */}
+      {/* TRUST STATISTICS CARDS */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <section
-        className="py-10 bg-white"
+        data-ocid="stats.section"
+        className="py-12 bg-white"
         style={{
-          borderTop: "1px solid oklch(92 0.01 240)",
-          borderBottom: "1px solid oklch(92 0.01 240)",
-          boxShadow: "0 2px 20px oklch(38 0.18 264 / 0.06)",
+          borderTop: "1px solid #e5e7eb",
+          borderBottom: "1px solid #e5e7eb",
         }}
       >
         <div className="container-custom">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-0 divide-y sm:divide-y-0 sm:divide-x divide-border">
-            {/* Stat 1 */}
-            <div className="flex flex-1 items-center justify-center gap-4 px-6 py-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* Card 1 — Verified Travel Partners */}
+            <div
+              data-ocid="stats.card.1"
+              className="flex flex-col items-center text-center bg-white rounded-2xl p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+              style={{
+                boxShadow: "0 2px 16px rgba(30,64,175,0.10)",
+                border: "1.5px solid #e0e7ff",
+              }}
+            >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "oklch(38 0.18 264 / 0.1)" }}
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: "rgba(30,64,175,0.08)" }}
               >
-                <ShieldCheck className="h-6 w-6 text-primary" />
+                <ShieldCheck className="h-7 w-7" style={{ color: "#1E40AF" }} />
               </div>
-              <StatCounter
-                target={150}
-                suffix="+"
-                label="Verified Travel Partners Across India"
-                ocid="hero.stats.partners"
-              />
+              <div
+                className="font-extrabold text-4xl md:text-5xl mb-2"
+                style={{ color: "#1E40AF", letterSpacing: "-0.02em" }}
+              >
+                150+
+              </div>
+              <div
+                className="font-semibold text-base"
+                style={{ color: "#111827" }}
+              >
+                Verified Travel Partners
+              </div>
             </div>
 
-            {/* Stat 2 */}
-            <div className="flex flex-1 items-center justify-center gap-4 px-6 py-2">
+            {/* Card 2 — Travel Leads */}
+            <div
+              data-ocid="stats.card.2"
+              className="flex flex-col items-center text-center bg-white rounded-2xl p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+              style={{
+                boxShadow: "0 2px 16px rgba(229,57,53,0.10)",
+                border: "1.5px solid #fee2e2",
+              }}
+            >
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "oklch(51 0.22 27 / 0.08)" }}
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: "rgba(229,57,53,0.08)" }}
               >
-                <BadgeCheck
-                  className="h-6 w-6"
-                  style={{ color: "oklch(51 0.22 27)" }}
+                <Mail className="h-7 w-7" style={{ color: "#E53935" }} />
+              </div>
+              <div
+                className="font-extrabold text-4xl md:text-5xl mb-2"
+                style={{ color: "#E53935", letterSpacing: "-0.02em" }}
+              >
+                12,000+
+              </div>
+              <div
+                className="font-semibold text-base"
+                style={{ color: "#111827" }}
+              >
+                Travel Leads
+              </div>
+            </div>
+
+            {/* Card 3 — Confirmed Bookings */}
+            <div
+              data-ocid="stats.card.3"
+              className="flex flex-col items-center text-center bg-white rounded-2xl p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+              style={{
+                boxShadow: "0 2px 16px rgba(22,163,74,0.10)",
+                border: "1.5px solid #dcfce7",
+              }}
+            >
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                style={{ background: "rgba(22,163,74,0.08)" }}
+              >
+                <CheckCircle2
+                  className="h-7 w-7"
+                  style={{ color: "#16a34a" }}
                 />
               </div>
-              <StatCounter
-                target={10000}
-                suffix="+"
-                label="Successful Bookings"
-                ocid="hero.stats.bookings"
-              />
-            </div>
-
-            {/* Stat 3 */}
-            <div className="flex flex-1 items-center justify-center gap-4 px-6 py-2">
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "oklch(76 0.155 74 / 0.12)" }}
+                className="font-extrabold text-4xl md:text-5xl mb-2"
+                style={{ color: "#16a34a", letterSpacing: "-0.02em" }}
               >
-                <Globe
-                  className="h-6 w-6"
-                  style={{ color: "oklch(60 0.14 68)" }}
-                />
+                5,000+
               </div>
-              <StatCounter
-                target={50}
-                suffix="+"
-                label="Popular Destinations"
-                ocid="hero.stats.destinations"
-              />
-            </div>
-
-            {/* Stat 4 */}
-            <div className="flex flex-1 items-center justify-center gap-4 px-6 py-2">
               <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "oklch(78 0.16 85 / 0.15)" }}
+                className="font-semibold text-base"
+                style={{ color: "#111827" }}
               >
-                <Star className="h-6 w-6 fill-[#F59E0B] text-[#F59E0B]" />
+                Confirmed Bookings
               </div>
-              <StatCounter
-                target={7000}
-                suffix="+"
-                label="Happy Customer Reviews"
-                ocid="hero.stats.reviews"
-              />
             </div>
           </div>
         </div>
@@ -2141,9 +2105,9 @@ export default function Home() {
                       Business Type *
                     </label>
                     <Select
-                      value={partnerForm.businessType}
+                      value={partnerForm.experience}
                       onValueChange={(v) =>
-                        setPartnerForm((p) => ({ ...p, businessType: v }))
+                        setPartnerForm((p) => ({ ...p, experience: v }))
                       }
                     >
                       <SelectTrigger

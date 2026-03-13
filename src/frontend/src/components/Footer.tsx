@@ -137,17 +137,17 @@ export default function Footer() {
                   className="text-sm"
                   style={{ color: "rgba(255,255,255,0.65)" }}
                 >
-                  123 Travel House, Connaught Place, New Delhi – 110001
+                  Dwarka Mor, Vipin Garden, Nawada, Delhi – 110059
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-4 w-4 text-[#93C5FD] flex-shrink-0" />
                 <a
-                  href="tel:+919999999999"
+                  href="tel:+917290087054"
                   className="text-sm transition-colors hover:text-white"
                   style={{ color: "rgba(255,255,255,0.65)" }}
                 >
-                  +91 99999 99999
+                  +91 7290087054
                 </a>
               </li>
               <li className="flex items-center gap-3">
