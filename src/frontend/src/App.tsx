@@ -10,11 +10,19 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import Contact from "./pages/Contact";
 import Destinations from "./pages/Destinations";
+import DomesticPackages from "./pages/DomesticPackages";
+import FlightBooking from "./pages/FlightBooking";
 import Home from "./pages/Home";
+import HotelBooking from "./pages/HotelBooking";
+import InternationalPackages from "./pages/InternationalPackages";
 import Partner from "./pages/Partner";
+import PartnerDashboard from "./pages/PartnerDashboard";
+import PartnerLogin from "./pages/PartnerLogin";
 import Partners from "./pages/Partners";
 import Pricing from "./pages/Pricing";
 import Services from "./pages/Services";
+import TransportServices from "./pages/TransportServices";
+import VisaAssistance from "./pages/VisaAssistance";
 
 const rootRoute = createRootRoute({
   component: Layout,
@@ -36,6 +44,42 @@ const servicesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/services",
   component: Services,
+});
+
+const flightBookingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/flight-booking",
+  component: FlightBooking,
+});
+
+const hotelBookingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/hotel-booking",
+  component: HotelBooking,
+});
+
+const domesticPackagesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/domestic-packages",
+  component: DomesticPackages,
+});
+
+const internationalPackagesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/international-packages",
+  component: InternationalPackages,
+});
+
+const visaAssistanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/visa-assistance",
+  component: VisaAssistance,
+});
+
+const transportServicesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/transport-services",
+  component: TransportServices,
 });
 
 const destinationsRoute = createRoute({
@@ -80,10 +124,28 @@ const adminDashboardRoute = createRoute({
   component: AdminDashboard,
 });
 
+const partnerLoginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/partner-login",
+  component: PartnerLogin,
+});
+
+const partnerDashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/partner-dashboard",
+  component: PartnerDashboard,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   aboutRoute,
   servicesRoute,
+  flightBookingRoute,
+  hotelBookingRoute,
+  domesticPackagesRoute,
+  internationalPackagesRoute,
+  visaAssistanceRoute,
+  transportServicesRoute,
   destinationsRoute,
   partnerRoute,
   partnersRoute,
@@ -91,6 +153,8 @@ const routeTree = rootRoute.addChildren([
   contactRoute,
   adminLoginRoute,
   adminDashboardRoute,
+  partnerLoginRoute,
+  partnerDashboardRoute,
 ]);
 
 const router = createRouter({ routeTree });

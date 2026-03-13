@@ -30,6 +30,7 @@ const services = [
     iconColor: "text-[#1E40AF]",
     hoverBg: "group-hover:bg-[#1E40AF]",
     hoverIcon: "group-hover:text-white",
+    href: "/flight-booking",
   },
   {
     icon: Building,
@@ -47,6 +48,7 @@ const services = [
     iconColor: "text-purple-600",
     hoverBg: "group-hover:bg-purple-600",
     hoverIcon: "group-hover:text-white",
+    href: "/hotel-booking",
   },
   {
     icon: MapPin,
@@ -64,6 +66,7 @@ const services = [
     iconColor: "text-orange-600",
     hoverBg: "group-hover:bg-orange-600",
     hoverIcon: "group-hover:text-white",
+    href: "/domestic-packages",
   },
   {
     icon: Globe,
@@ -81,6 +84,7 @@ const services = [
     iconColor: "text-teal-600",
     hoverBg: "group-hover:bg-teal-600",
     hoverIcon: "group-hover:text-white",
+    href: "/international-packages",
   },
   {
     icon: FileText,
@@ -98,6 +102,7 @@ const services = [
     iconColor: "text-[#E53935]",
     hoverBg: "group-hover:bg-[#E53935]",
     hoverIcon: "group-hover:text-white",
+    href: "/visa-assistance",
   },
   {
     icon: Car,
@@ -115,6 +120,7 @@ const services = [
     iconColor: "text-green-600",
     hoverBg: "group-hover:bg-green-600",
     hoverIcon: "group-hover:text-white",
+    href: "/transport-services",
   },
 ];
 
@@ -215,7 +221,8 @@ export default function Services() {
 
                 {/* Learn more link */}
                 <Link
-                  to="/partner"
+                  to={service.href}
+                  data-ocid={`services.card.learnmore.${i + 1}`}
                   className="inline-flex items-center gap-1.5 text-[#1E40AF] text-sm font-semibold hover:gap-2.5 transition-all"
                 >
                   Learn More <ArrowRight className="h-4 w-4" />

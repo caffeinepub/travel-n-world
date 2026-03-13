@@ -1,3 +1,4 @@
+import BookingModal from "@/components/BookingModal";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -91,7 +92,12 @@ type Filter = "all" | "asia" | "europe" | "domestic";
 function DestCard({
   dest,
   index,
-}: { dest: (typeof destinations)[0]; index: number }) {
+  onBook,
+}: {
+  dest: (typeof destinations)[0];
+  index: number;
+  onBook: (name: string) => void;
+}) {
   const [imgError, setImgError] = useState(false);
 
   return (
@@ -166,10 +172,12 @@ function DestCard({
 
         {/* CTA */}
         <Button
-          asChild
+          type="button"
+          onClick={() => onBook(dest.name)}
           className="w-full rounded-xl bg-[#1E40AF] hover:bg-blue-800 active:bg-blue-900 text-white font-semibold h-10 text-sm transition-all duration-300 hover:shadow-md"
+          data-ocid="dest.enquire_now.button"
         >
-          <Link to="/partner">Enquire Now</Link>
+          Enquire Now
         </Button>
       </div>
     </div>
@@ -178,6 +186,10 @@ function DestCard({
 
 export default function Destinations() {
   const [filter, setFilter] = useState<Filter>("all");
+  const [bookingModal, setBookingModal] = useState<{
+    open: boolean;
+    destination: string;
+  }>({ open: false, destination: "" });
   useEffect(() => {
     document.title = "Destinations — Travel N World";
   }, []);
@@ -227,7 +239,14 @@ export default function Destinations() {
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((dest, i) => (
-              <DestCard key={dest.name} dest={dest} index={i} />
+              <DestCard
+                key={dest.name}
+                dest={dest}
+                index={i}
+                onBook={(name) =>
+                  setBookingModal({ open: true, destination: name })
+                }
+              />
             ))}
           </div>
 
@@ -242,6 +261,12 @@ export default function Destinations() {
           )}
         </div>
       </section>
+
+      <BookingModal
+        open={bookingModal.open}
+        onClose={() => setBookingModal({ open: false, destination: "" })}
+        destinationName={bookingModal.destination}
+      />
     </div>
   );
 }

@@ -1,12 +1,27 @@
 import { Link } from "@tanstack/react-router";
 import { Mail, MapPin, Phone, Plane } from "lucide-react";
-import {
-  SiFacebook,
-  SiInstagram,
-  SiLinkedin,
-  SiX,
-  SiYoutube,
-} from "react-icons/si";
+import { SiFacebook, SiInstagram, SiLinkedin } from "react-icons/si";
+
+const SOCIAL = [
+  {
+    icon: SiLinkedin,
+    href: "https://linkedin.com/company/travelnworld",
+    label: "LinkedIn",
+    color: "hover:bg-[#0077B5]",
+  },
+  {
+    icon: SiInstagram,
+    href: "https://instagram.com/travelnworld_official",
+    label: "Instagram",
+    color: "hover:bg-gradient-to-br hover:from-purple-500 hover:to-pink-500",
+  },
+  {
+    icon: SiFacebook,
+    href: "https://facebook.com/profile.php?id=10009174104398",
+    label: "Facebook",
+    color: "hover:bg-[#1877F2]",
+  },
+];
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -46,18 +61,15 @@ export default function Footer() {
             </p>
             {/* Social Links */}
             <div className="flex items-center gap-3">
-              {[
-                { icon: SiFacebook, href: "#", label: "Facebook" },
-                { icon: SiInstagram, href: "#", label: "Instagram" },
-                { icon: SiX, href: "#", label: "X" },
-                { icon: SiLinkedin, href: "#", label: "LinkedIn" },
-                { icon: SiYoutube, href: "#", label: "YouTube" },
-              ].map(({ icon: Icon, href, label }) => (
+              {SOCIAL.map(({ icon: Icon, href, label, color }) => (
                 <a
                   key={label}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
-                  className="p-2.5 rounded-lg transition-colors hover:text-white"
+                  data-ocid={`footer.social.${label.toLowerCase()}.link`}
+                  className={`p-2.5 rounded-lg transition-all duration-200 hover:text-white hover:scale-110 ${color}`}
                   style={{
                     background: "rgba(255,255,255,0.08)",
                     color: "rgba(255,255,255,0.7)",
@@ -104,21 +116,24 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3">
               {[
-                "Flight Booking",
-                "Hotel Booking",
-                "Domestic Packages",
-                "International Packages",
-                "Visa Assistance",
-                "Transport Services",
+                { label: "Flight Booking", to: "/flight-booking" },
+                { label: "Hotel Booking", to: "/hotel-booking" },
+                { label: "Domestic Packages", to: "/domestic-packages" },
+                {
+                  label: "International Packages",
+                  to: "/international-packages",
+                },
+                { label: "Visa Assistance", to: "/visa-assistance" },
+                { label: "Transport Services", to: "/transport-services" },
               ].map((s) => (
-                <li key={s}>
+                <li key={s.to}>
                   <Link
-                    to="/services"
+                    to={s.to}
                     className="text-sm transition-colors flex items-center gap-2 hover:text-white"
                     style={{ color: "rgba(255,255,255,0.65)" }}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-[#93C5FD] opacity-60" />
-                    {s}
+                    {s.label}
                   </Link>
                 </li>
               ))}

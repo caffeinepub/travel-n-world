@@ -1,3 +1,4 @@
+import BookingModal from "@/components/BookingModal";
 import { TravelLeadsSections } from "@/components/TravelLeadsSections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1032,6 +1033,10 @@ function getShowcaseGradient(name: string): string {
 
 export default function Home() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [bookingModal, setBookingModal] = useState<{
+    open: boolean;
+    destination: string;
+  }>({ open: false, destination: "" });
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [partnerForm, setPartnerForm] = useState({
     name: "",
@@ -1505,8 +1510,13 @@ export default function Home() {
                   >
                     <button
                       type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBookingModal({ open: true, destination: dest.name });
+                      }}
                       className="mt-3 w-full text-center text-sm font-bold py-2 rounded-xl text-white"
                       style={{ background: "oklch(38 0.18 264 / 0.85)" }}
+                      data-ocid={`destinations.book_now.${i + 1}`}
                     >
                       Book Now →
                     </button>
@@ -2507,6 +2517,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <BookingModal
+        open={bookingModal.open}
+        onClose={() => setBookingModal({ open: false, destination: "" })}
+        destinationName={bookingModal.destination}
+      />
     </div>
   );
 }

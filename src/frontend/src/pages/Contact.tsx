@@ -6,6 +6,7 @@ import { useSubmitContactForm } from "@/hooks/useQueries";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { Clock, Loader2, Mail, MapPin, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
+import { SiFacebook, SiInstagram, SiLinkedin } from "react-icons/si";
 import { toast } from "sonner";
 
 const contactInfo = [
@@ -28,6 +29,30 @@ const contactInfo = [
     icon: Clock,
     title: "Working Hours",
     lines: ["Mon – Sat: 9:00 AM – 7:00 PM", "Sun: 10:00 AM – 4:00 PM"],
+  },
+];
+
+const socialLinks = [
+  {
+    icon: SiLinkedin,
+    href: "https://linkedin.com/company/travelnworld",
+    label: "LinkedIn",
+    bg: "bg-[#0077B5]",
+    desc: "Connect with us professionally",
+  },
+  {
+    icon: SiInstagram,
+    href: "https://instagram.com/travelnworld_official",
+    label: "Instagram",
+    bg: "bg-gradient-to-br from-purple-500 to-pink-500",
+    desc: "Follow our travel stories",
+  },
+  {
+    icon: SiFacebook,
+    href: "https://facebook.com/profile.php?id=10009174104398",
+    label: "Facebook",
+    bg: "bg-[#1877F2]",
+    desc: "Like our official page",
   },
 ];
 
@@ -86,6 +111,36 @@ export default function Contact() {
                 ))}
               </div>
             ))}
+          </div>
+
+          {/* Social Media Section */}
+          <div className="mb-16 reveal">
+            <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8">
+              <h2 className="font-bold text-xl text-gray-900 mb-2 text-center">
+                Follow Us on Social Media
+              </h2>
+              <p className="text-gray-500 text-sm text-center mb-8">
+                Stay connected and get the latest travel updates
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+                {socialLinks.map(({ icon: Icon, href, label, bg, desc }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-ocid={`contact.social.${label.toLowerCase()}.link`}
+                    className={`flex items-center gap-4 px-6 py-4 ${bg} text-white rounded-2xl hover:opacity-90 hover:scale-105 transition-all duration-200 shadow-sm min-w-[200px]`}
+                  >
+                    <Icon className="h-6 w-6 flex-shrink-0" />
+                    <div>
+                      <div className="font-bold text-sm">{label}</div>
+                      <div className="text-white/80 text-xs">{desc}</div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">

@@ -1,3 +1,4 @@
+import { generatePartnerPlans } from "@/lib/generatePartnerPlans";
 import {
   type PartnerRegistration as StoredPartnerReg,
   getPartnerRegistrations,
@@ -5,12 +6,17 @@ import {
 } from "@/lib/partnerStore";
 import { useNavigate } from "@tanstack/react-router";
 import {
+  BarChart2,
   BookOpen,
   Building2,
   CheckCircle,
+  CreditCard,
   Edit,
+  Eye,
+  Globe,
   LogOut,
   Menu,
+  MessageSquare,
   Plus,
   Search,
   Shield,
@@ -18,12 +24,18 @@ import {
   TrendingUp,
   Users,
   X,
+  XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import * as XLSX from "xlsx";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type PartnerStatus = "Pending" | "Approved" | "Verified" | "Rejected";
+type LeadStatus = "Active" | "Converted" | "Archived";
+type InquiryStatus = "New" | "Contacted" | "Confirmed" | "Deleted";
+type PlanType = "Starter" | "Professional" | "Premium";
+type PlanStatus = "Active" | "Inactive" | "Expired";
 
 interface PartnerReg {
   id: number;
@@ -35,6 +47,7 @@ interface PartnerReg {
   experience?: string;
   date: string;
   status: PartnerStatus;
+  planStatus?: string;
   isNew?: boolean;
 }
 
@@ -47,6 +60,39 @@ interface Lead {
   budget: string;
   phone: string;
   assignedTo: string;
+  email?: string;
+  message?: string;
+  leadSource?: "Website" | "WhatsApp" | "Form";
+  status?: LeadStatus;
+  isNew?: boolean;
+}
+
+interface BookingInquiry {
+  id: number;
+  customerName: string;
+  phone: string;
+  email: string;
+  destination: string;
+  travelDate: string;
+  travelers: number;
+  budget: string;
+  message: string;
+  inquiryDate: string;
+  status: InquiryStatus;
+  assignedTo?: string;
+}
+
+interface PartnerPlan {
+  id: number;
+  partnerName: string;
+  company: string;
+  city?: string;
+  planType: PlanType;
+  price: string;
+  startDate: string;
+  expiryDate: string;
+  paymentStatus: "Paid" | "Pending" | "Failed";
+  status: PlanStatus;
 }
 
 interface Booking {
@@ -57,16 +103,6 @@ interface Booking {
   value: string;
   date: string;
   status: "Confirmed" | "Pending" | "Cancelled";
-}
-
-interface DirectoryPartner {
-  id: number;
-  company: string;
-  city: string;
-  specialization: string;
-  phone: string;
-  email: string;
-  verified: boolean;
 }
 
 // ─── Sample Data ─────────────────────────────────────────────────────────────
@@ -81,6 +117,7 @@ const INITIAL_REGISTRATIONS: PartnerReg[] = [
     city: "Delhi",
     date: "2026-03-01",
     status: "Pending",
+    planStatus: "None",
   },
   {
     id: 2,
@@ -91,316 +128,212 @@ const INITIAL_REGISTRATIONS: PartnerReg[] = [
     city: "Mumbai",
     date: "2026-03-03",
     status: "Approved",
+    planStatus: "Professional",
   },
   {
     id: 3,
     name: "Aman Gupta",
-    company: "Royal Journeys",
+    company: "TravelEase India",
     phone: "+91 76543 21098",
-    email: "aman@royaljourneys.in",
-    city: "Jaipur",
-    date: "2026-03-05",
+    email: "aman@travelease.in",
+    city: "Bangalore",
+    date: "2026-02-28",
     status: "Verified",
+    planStatus: "Premium",
   },
   {
     id: 4,
-    name: "Sunita Patel",
-    company: "Voyager India",
+    name: "Sunita Verma",
+    company: "Wanderlust Pvt Ltd",
     phone: "+91 65432 10987",
-    email: "sunita@voyagerindia.in",
-    city: "Ahmedabad",
-    date: "2026-03-07",
+    email: "sunita@wanderlust.in",
+    city: "Chennai",
+    date: "2026-02-25",
     status: "Pending",
+    planStatus: "None",
   },
   {
     id: 5,
     name: "Vikram Singh",
     company: "BlueSky Holidays",
     phone: "+91 54321 09876",
-    email: "vikram@blueskyholidays.in",
-    city: "Bangalore",
-    date: "2026-03-08",
-    status: "Rejected",
-  },
-  {
-    id: 6,
-    name: "Kavita Nair",
-    company: "Dreamland Travels",
-    phone: "+91 43210 98765",
-    email: "kavita@dreamlandtravels.in",
-    city: "Chennai",
-    date: "2026-03-09",
-    status: "Pending",
-  },
-  {
-    id: 7,
-    name: "Rohit Jain",
-    company: "Globe Trotters",
-    phone: "+91 32109 87654",
-    email: "rohit@globetrotters.in",
-    city: "Kolkata",
-    date: "2026-03-10",
+    email: "vikram@bluesky.in",
+    city: "Jaipur",
+    date: "2026-02-20",
     status: "Approved",
-  },
-  {
-    id: 8,
-    name: "Meena Reddy",
-    company: "Wanderlust Tours",
-    phone: "+91 21098 76543",
-    email: "meena@wanderlusttours.in",
-    city: "Hyderabad",
-    date: "2026-03-11",
-    status: "Pending",
+    planStatus: "Starter",
   },
 ];
 
-const LEADS: Lead[] = [
+const INITIAL_LEADS: Lead[] = [
   {
     id: 1,
-    customer: "Amit Verma",
-    destination: "Dubai Tour",
+    customer: "Ankit Joshi",
+    destination: "Dubai",
     travelDate: "2026-04-15",
-    travelers: 4,
+    travelers: 2,
     budget: "₹1,20,000",
-    phone: "+91 98XXX1234",
-    assignedTo: "",
+    phone: "+91 98111 22333",
+    assignedTo: "Horizon Travels",
+    leadSource: "Website",
+    status: "Active",
   },
   {
     id: 2,
-    customer: "Neha Kapoor",
-    destination: "Goa Holiday",
-    travelDate: "2026-04-20",
-    travelers: 2,
-    budget: "₹45,000",
-    phone: "+91 87XXX5678",
+    customer: "Kavita Rao",
+    destination: "Goa",
+    travelDate: "2026-05-01",
+    travelers: 4,
+    budget: "₹60,000",
+    phone: "+91 97222 33444",
     assignedTo: "",
+    leadSource: "Form",
+    status: "Active",
   },
   {
     id: 3,
-    customer: "Suresh Kumar",
-    destination: "Manali Trip",
-    travelDate: "2026-05-01",
-    travelers: 5,
-    budget: "₹55,000",
-    phone: "+91 76XXX9012",
-    assignedTo: "Horizon Travels",
+    customer: "Suresh Nair",
+    destination: "Thailand",
+    travelDate: "2026-06-10",
+    travelers: 3,
+    budget: "₹90,000",
+    phone: "+91 96333 44555",
+    assignedTo: "SkyWing Tours",
+    leadSource: "WhatsApp",
+    status: "Converted",
   },
   {
     id: 4,
-    customer: "Pooja Sharma",
-    destination: "Kerala Tour",
-    travelDate: "2026-05-10",
-    travelers: 3,
-    budget: "₹65,000",
-    phone: "+91 65XXX3456",
+    customer: "Meena Patel",
+    destination: "Manali",
+    travelDate: "2026-03-25",
+    travelers: 5,
+    budget: "₹55,000",
+    phone: "+91 95444 55666",
     assignedTo: "",
+    leadSource: "Website",
+    status: "Active",
   },
   {
     id: 5,
-    customer: "Ravi Agarwal",
+    customer: "Ravi Kumar",
+    destination: "Kerala",
+    travelDate: "2026-07-20",
+    travelers: 2,
+    budget: "₹70,000",
+    phone: "+91 94555 66777",
+    assignedTo: "BlueSky Holidays",
+    leadSource: "Form",
+    status: "Active",
+  },
+  {
+    id: 6,
+    customer: "Pooja Sharma",
+    destination: "Singapore",
+    travelDate: "2026-08-05",
+    travelers: 2,
+    budget: "₹1,50,000",
+    phone: "+91 93666 77888",
+    assignedTo: "",
+    leadSource: "Website",
+    status: "Archived",
+  },
+];
+
+const INITIAL_INQUIRIES: BookingInquiry[] = [
+  {
+    id: 1,
+    customerName: "Rohit Agarwal",
+    phone: "+91 98001 11222",
+    email: "rohit@gmail.com",
+    destination: "Dubai",
+    travelDate: "2026-04-20",
+    travelers: 2,
+    budget: "₹1,30,000",
+    message: "Looking for a honeymoon package.",
+    inquiryDate: "2026-03-10",
+    status: "New",
+  },
+  {
+    id: 2,
+    customerName: "Sneha Jain",
+    phone: "+91 97002 22333",
+    email: "sneha@gmail.com",
     destination: "Maldives",
     travelDate: "2026-05-15",
     travelers: 2,
-    budget: "₹2,50,000",
-    phone: "+91 54XXX7890",
-    assignedTo: "SkyWing Tours",
+    budget: "₹2,00,000",
+    message: "Beach villa preferred.",
+    inquiryDate: "2026-03-09",
+    status: "Contacted",
   },
   {
-    id: 6,
-    customer: "Anjali Singh",
+    id: 3,
+    customerName: "Deepak Verma",
+    phone: "+91 96003 33444",
+    email: "deepak@gmail.com",
     destination: "Thailand",
-    travelDate: "2026-05-20",
-    travelers: 6,
-    budget: "₹1,80,000",
-    phone: "+91 43XXX2345",
-    assignedTo: "",
-  },
-  {
-    id: 7,
-    customer: "Deepak Gupta",
-    destination: "Singapore",
     travelDate: "2026-06-01",
     travelers: 4,
-    budget: "₹2,10,000",
-    phone: "+91 32XXX6789",
-    assignedTo: "Royal Journeys",
+    budget: "₹1,20,000",
+    message: "Family trip with kids.",
+    inquiryDate: "2026-03-08",
+    status: "New",
   },
   {
-    id: 8,
-    customer: "Shruti Patel",
-    destination: "Bali Indonesia",
-    travelDate: "2026-06-10",
-    travelers: 2,
-    budget: "₹1,40,000",
-    phone: "+91 21XXX0123",
-    assignedTo: "",
-  },
-  {
-    id: 9,
-    customer: "Manoj Tiwari",
-    destination: "Kashmir",
-    travelDate: "2026-06-15",
-    travelers: 7,
+    id: 4,
+    customerName: "Priya Singh",
+    phone: "+91 95004 44555",
+    email: "priya@gmail.com",
+    destination: "Goa",
+    travelDate: "2026-03-28",
+    travelers: 5,
     budget: "₹80,000",
-    phone: "+91 11XXX4567",
-    assignedTo: "",
+    message: "Group trip, need budget hotel.",
+    inquiryDate: "2026-03-07",
+    status: "Confirmed",
   },
   {
-    id: 10,
-    customer: "Prerna Mishra",
-    destination: "Europe Tour",
-    travelDate: "2026-07-01",
+    id: 5,
+    customerName: "Arun Mishra",
+    phone: "+91 94005 55666",
+    email: "arun@gmail.com",
+    destination: "Kashmir",
+    travelDate: "2026-07-10",
     travelers: 3,
-    budget: "₹4,50,000",
-    phone: "+91 99XXX8901",
-    assignedTo: "BlueSky Holidays",
-  },
-];
-
-const BOOKINGS: Booking[] = [
-  {
-    id: 1,
-    customer: "Amit Verma",
-    destination: "Dubai Package",
-    partner: "Horizon Travels",
-    value: "₹1,15,000",
-    date: "2026-03-05",
-    status: "Confirmed",
-  },
-  {
-    id: 2,
-    customer: "Priya Shah",
-    destination: "Goa Weekend",
-    partner: "SkyWing Tours",
-    value: "₹42,000",
-    date: "2026-03-06",
-    status: "Confirmed",
-  },
-  {
-    id: 3,
-    customer: "Kiran Joshi",
-    destination: "Manali Snow",
-    partner: "Royal Journeys",
-    value: "₹58,000",
-    date: "2026-03-07",
-    status: "Pending",
-  },
-  {
-    id: 4,
-    customer: "Sunita Bose",
-    destination: "Kerala Backwaters",
-    partner: "Voyager India",
-    value: "₹70,000",
-    date: "2026-03-08",
-    status: "Confirmed",
-  },
-  {
-    id: 5,
-    customer: "Rahul Verma",
-    destination: "Maldives Luxury",
-    partner: "Dreamland Travels",
-    value: "₹2,40,000",
-    date: "2026-03-09",
-    status: "Confirmed",
+    budget: "₹75,000",
+    message: "Adventure activities required.",
+    inquiryDate: "2026-03-06",
+    status: "New",
   },
   {
     id: 6,
-    customer: "Sonia Kapoor",
-    destination: "Bangkok Tour",
-    partner: "Globe Trotters",
-    value: "₹85,000",
-    date: "2026-03-10",
-    status: "Cancelled",
-  },
-  {
-    id: 7,
-    customer: "Gaurav Singh",
-    destination: "Singapore",
-    partner: "BlueSky Holidays",
-    value: "₹1,90,000",
-    date: "2026-03-11",
-    status: "Pending",
-  },
-  {
-    id: 8,
-    customer: "Ritu Sharma",
-    destination: "Kashmir Valley",
-    partner: "Wanderlust Tours",
-    value: "₹72,000",
-    date: "2026-03-12",
-    status: "Confirmed",
+    customerName: "Nita Bose",
+    phone: "+91 93006 66777",
+    email: "nita@gmail.com",
+    destination: "Europe",
+    travelDate: "2026-09-15",
+    travelers: 2,
+    budget: "₹3,50,000",
+    message: "10-day Europe tour.",
+    inquiryDate: "2026-03-05",
+    status: "New",
   },
 ];
 
-const INITIAL_DIRECTORY: DirectoryPartner[] = [
-  {
-    id: 1,
-    company: "Horizon Travels",
-    city: "Delhi",
-    specialization: "International",
-    phone: "+91 98765 43210",
-    email: "info@horizontravels.in",
-    verified: true,
-  },
-  {
-    id: 2,
-    company: "SkyWing Tours",
-    city: "Mumbai",
-    specialization: "Domestic",
-    phone: "+91 87654 32109",
-    email: "info@skywingtours.in",
-    verified: true,
-  },
-  {
-    id: 3,
-    company: "Royal Journeys",
-    city: "Jaipur",
-    specialization: "Luxury",
-    phone: "+91 76543 21098",
-    email: "info@royaljourneys.in",
-    verified: true,
-  },
-  {
-    id: 4,
-    company: "Voyager India",
-    city: "Ahmedabad",
-    specialization: "Domestic",
-    phone: "+91 65432 10987",
-    email: "info@voyagerindia.in",
-    verified: false,
-  },
-  {
-    id: 5,
-    company: "BlueSky Holidays",
-    city: "Bangalore",
-    specialization: "International",
-    phone: "+91 54321 09876",
-    email: "info@blueskyholidays.in",
-    verified: true,
-  },
-  {
-    id: 6,
-    company: "Dreamland Travels",
-    city: "Chennai",
-    specialization: "Adventure",
-    phone: "+91 43210 98765",
-    email: "info@dreamlandtravels.in",
-    verified: false,
-  },
-];
+const INITIAL_PLANS: PartnerPlan[] = generatePartnerPlans();
 
 const PARTNER_NAMES = [
   "Horizon Travels",
   "SkyWing Tours",
-  "Royal Journeys",
-  "Voyager India",
+  "TravelEase India",
+  "Wanderlust Pvt Ltd",
   "BlueSky Holidays",
-  "Dreamland Travels",
   "Globe Trotters",
-  "Wanderlust Tours",
+  "Dreamland Travels",
 ];
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Color Maps ───────────────────────────────────────────────────────────────
 
 const statusColors: Record<PartnerStatus, { bg: string; color: string }> = {
   Pending: { bg: "#fef9c3", color: "#854d0e" },
@@ -409,10 +342,35 @@ const statusColors: Record<PartnerStatus, { bg: string; color: string }> = {
   Rejected: { bg: "#fee2e2", color: "#991b1b" },
 };
 
-const bookingStatusColors: Record<string, { bg: string; color: string }> = {
+const inquiryStatusColors: Record<
+  InquiryStatus,
+  { bg: string; color: string }
+> = {
+  New: { bg: "#dbeafe", color: "#1e3a8a" },
+  Contacted: { bg: "#fef9c3", color: "#854d0e" },
   Confirmed: { bg: "#dcfce7", color: "#166534" },
-  Pending: { bg: "#fef9c3", color: "#854d0e" },
-  Cancelled: { bg: "#fee2e2", color: "#991b1b" },
+  Deleted: { bg: "#fee2e2", color: "#991b1b" },
+};
+
+const leadStatusColors: Record<LeadStatus, { bg: string; color: string }> = {
+  Active: { bg: "#dcfce7", color: "#166534" },
+  Converted: { bg: "#dbeafe", color: "#1e3a8a" },
+  Archived: { bg: "#f3f4f6", color: "#6b7280" },
+};
+
+const planStatusColors: Record<PlanStatus, { bg: string; color: string }> = {
+  Active: { bg: "#dcfce7", color: "#166534" },
+  Inactive: { bg: "#fef9c3", color: "#854d0e" },
+  Expired: { bg: "#fee2e2", color: "#991b1b" },
+};
+
+const planTypeColors: Record<
+  PlanType,
+  { bg: string; color: string; border: string }
+> = {
+  Starter: { bg: "#f0fdf4", color: "#166534", border: "#86efac" },
+  Professional: { bg: "#eff6ff", color: "#1e40af", border: "#93c5fd" },
+  Premium: { bg: "#faf5ff", color: "#6b21a8", border: "#d8b4fe" },
 };
 
 function StatusBadge({
@@ -436,542 +394,240 @@ function StatusBadge({
   );
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
+// ─── View Inquiry Modal ───────────────────────────────────────────────────────
 
-export default function AdminDashboard() {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // State for each section
-  const [registrations, setRegistrations] = useState<PartnerReg[]>(() => {
-    const realSubmissions = getPartnerRegistrations().map(
-      (r: StoredPartnerReg): PartnerReg => ({
-        id: r.id,
-        name: r.name,
-        company: r.company,
-        phone: r.phone,
-        email: r.email,
-        city: r.city,
-        experience: r.experience,
-        date: r.date,
-        status: r.status as PartnerStatus,
-        isNew: true,
-      }),
-    );
-    // Merge: real submissions first, then sample data (filtering out duplicates by id)
-    const realIds = new Set(realSubmissions.map((r) => r.id));
-    const sampleData = INITIAL_REGISTRATIONS.filter((r) => !realIds.has(r.id));
-    return [...realSubmissions, ...sampleData];
-  });
-  const [leads, setLeads] = useState<Lead[]>(LEADS);
-  const [leadSearch, setLeadSearch] = useState("");
-  const [directory, setDirectory] =
-    useState<DirectoryPartner[]>(INITIAL_DIRECTORY);
-  const [showAddPartnerModal, setShowAddPartnerModal] = useState(false);
-  const [editingPartner, setEditingPartner] = useState<DirectoryPartner | null>(
-    null,
-  );
-  const [newPartner, setNewPartner] = useState({
-    company: "",
-    city: "",
-    specialization: "",
-    phone: "",
-    email: "",
-  });
-
-  useEffect(() => {
-    if (localStorage.getItem("tnw_admin_auth") !== "true") {
-      navigate({ to: "/admin-login" });
-    }
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("tnw_admin_auth");
-    navigate({ to: "/admin-login" });
-  };
-
-  const handleRefreshRegistrations = () => {
-    const realSubmissions = getPartnerRegistrations().map(
-      (r: StoredPartnerReg): PartnerReg => ({
-        id: r.id,
-        name: r.name,
-        company: r.company,
-        phone: r.phone,
-        email: r.email,
-        city: r.city,
-        experience: r.experience,
-        date: r.date,
-        status: r.status as PartnerStatus,
-        isNew: true,
-      }),
-    );
-    const realIds = new Set(realSubmissions.map((r) => r.id));
-    const sampleData = INITIAL_REGISTRATIONS.filter((r) => !realIds.has(r.id));
-    setRegistrations([...realSubmissions, ...sampleData]);
-  };
-
-  const handleStatusChange = (id: number, status: PartnerStatus) => {
-    setRegistrations((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status } : r)),
-    );
-    // Persist status to localStorage for real submissions
-    updatePartnerStatus(id, status);
-  };
-
-  const handleAssign = (id: number, assignedTo: string) => {
-    setLeads((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, assignedTo } : l)),
-    );
-  };
-
-  const handleRemovePartner = (id: number) => {
-    setDirectory((prev) => prev.filter((p) => p.id !== id));
-  };
-
-  const handleAddPartner = () => {
-    if (!newPartner.company) return;
-    const id = Math.max(...directory.map((p) => p.id), 0) + 1;
-    setDirectory((prev) => [...prev, { ...newPartner, id, verified: false }]);
-    setNewPartner({
-      company: "",
-      city: "",
-      specialization: "",
-      phone: "",
-      email: "",
-    });
-    setShowAddPartnerModal(false);
-  };
-
-  const filteredLeads = leads.filter(
-    (l) =>
-      l.customer.toLowerCase().includes(leadSearch.toLowerCase()) ||
-      l.destination.toLowerCase().includes(leadSearch.toLowerCase()),
-  );
-
-  const navItems = [
-    { id: "overview", label: "Overview", icon: TrendingUp },
-    { id: "registrations", label: "Partner Registrations", icon: Users },
-    { id: "leads", label: "Travel Leads", icon: BookOpen },
-    { id: "bookings", label: "Bookings", icon: CheckCircle },
-    { id: "directory", label: "Partner Directory", icon: Building2 },
-  ];
-
+function InquiryModal({
+  inquiry,
+  onClose,
+}: { inquiry: BookingInquiry; onClose: () => void }) {
   return (
     <div
       style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.5)",
+        zIndex: 1000,
         display: "flex",
-        minHeight: "100vh",
-        fontFamily: "'Inter', sans-serif",
-        background: "#f8fafc",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
       }}
+      data-ocid="inquiry.modal"
     >
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          onKeyDown={() => setSidebarOpen(false)}
-          role="presentation"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 40,
-          }}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        style={{
-          width: "240px",
-          background: "#0F172A",
-          display: "flex",
-          flexDirection: "column",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          zIndex: 50,
-          transform: sidebarOpen ? "translateX(0)" : undefined,
-          transition: "transform 0.3s",
-        }}
-        className="hidden md:flex"
-      >
-        <SidebarContent
-          navItems={navItems}
-          activeTab={activeTab}
-          setActiveTab={(tab) => {
-            setActiveTab(tab);
-            setSidebarOpen(false);
-          }}
-          handleLogout={handleLogout}
-        />
-      </aside>
-
-      {/* Mobile Sidebar */}
-      {sidebarOpen && (
-        <aside
-          style={{
-            width: "240px",
-            background: "#0F172A",
-            display: "flex",
-            flexDirection: "column",
-            position: "fixed",
-            top: 0,
-            left: 0,
-            bottom: 0,
-            zIndex: 50,
-          }}
-        >
-          <SidebarContent
-            navItems={navItems}
-            activeTab={activeTab}
-            setActiveTab={(tab) => {
-              setActiveTab(tab);
-              setSidebarOpen(false);
-            }}
-            handleLogout={handleLogout}
-          />
-        </aside>
-      )}
-
-      {/* Main */}
       <div
         style={{
-          flex: 1,
-          marginLeft: 0,
-          display: "flex",
-          flexDirection: "column",
+          background: "#fff",
+          borderRadius: "16px",
+          padding: "32px",
+          maxWidth: "520px",
+          width: "100%",
+          position: "relative",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
         }}
-        className="md:ml-[240px]"
       >
-        {/* Top bar */}
-        <header
+        <button
+          type="button"
+          onClick={onClose}
           style={{
-            background: "#ffffff",
-            borderBottom: "1px solid #e5e7eb",
-            padding: "0 24px",
-            height: "64px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            position: "sticky",
-            top: 0,
-            zIndex: 30,
+            position: "absolute",
+            top: "16px",
+            right: "16px",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#6b7280",
+          }}
+          data-ocid="inquiry.close_button"
+        >
+          <X size={20} />
+        </button>
+        <h3
+          style={{
+            fontFamily: "Poppins, sans-serif",
+            fontWeight: 700,
+            fontSize: "20px",
+            color: "#1e40af",
+            marginBottom: "20px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(true)}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                padding: "4px",
-              }}
-              className="md:hidden"
-              data-ocid="admin.toggle"
-            >
-              <Menu size={22} color="#374151" />
-            </button>
-            <div>
-              <h2
-                style={{
-                  fontSize: "18px",
-                  fontWeight: 700,
-                  color: "#111827",
-                  margin: 0,
-                  fontFamily: "'Poppins', sans-serif",
-                }}
-              >
-                {navItems.find((n) => n.id === activeTab)?.label}
-              </h2>
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                background: "#1E40AF",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: "14px",
-              }}
-            >
-              A
-            </div>
-            <span
-              style={{ fontSize: "13px", color: "#374151", fontWeight: 500 }}
-            >
-              Admin
-            </span>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main style={{ flex: 1, padding: "24px", overflowX: "hidden" }}>
-          {activeTab === "overview" && <OverviewTab />}
-          {activeTab === "registrations" && (
-            <RegistrationsTab
-              registrations={registrations}
-              onStatusChange={handleStatusChange}
-              onRefresh={handleRefreshRegistrations}
-            />
-          )}
-          {activeTab === "leads" && (
-            <LeadsTab
-              leads={filteredLeads}
-              search={leadSearch}
-              setSearch={setLeadSearch}
-              onAssign={handleAssign}
-            />
-          )}
-          {activeTab === "bookings" && <BookingsTab />}
-          {activeTab === "directory" && (
-            <DirectoryTab
-              directory={directory}
-              onRemove={handleRemovePartner}
-              onAdd={() => setShowAddPartnerModal(true)}
-              editingPartner={editingPartner}
-              setEditingPartner={setEditingPartner}
-              onSaveEdit={(p) => {
-                setDirectory((prev) =>
-                  prev.map((d) => (d.id === p.id ? p : d)),
-                );
-                setEditingPartner(null);
-              }}
-            />
-          )}
-        </main>
-      </div>
-
-      {/* Add Partner Modal */}
-      {showAddPartnerModal && (
+          Booking Inquiry Details
+        </h3>
         <div
           style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 100,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "16px",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "12px",
           }}
-          data-ocid="admin.dialog"
         >
+          {[
+            ["Customer", inquiry.customerName],
+            ["Phone", inquiry.phone],
+            ["Email", inquiry.email],
+            ["Destination", inquiry.destination],
+            ["Travel Date", inquiry.travelDate],
+            ["Travelers", String(inquiry.travelers)],
+            ["Budget", inquiry.budget],
+            ["Inquiry Date", inquiry.inquiryDate],
+          ].map(([label, val]) => (
+            <div key={label}>
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#9ca3af",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  marginBottom: "2px",
+                }}
+              >
+                {label}
+              </div>
+              <div
+                style={{ fontSize: "14px", color: "#111827", fontWeight: 500 }}
+              >
+                {val}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: "16px" }}>
           <div
             style={{
-              background: "#fff",
-              borderRadius: "12px",
-              padding: "32px",
-              width: "100%",
-              maxWidth: "480px",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+              fontSize: "11px",
+              color: "#9ca3af",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              marginBottom: "4px",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "24px",
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "18px",
-                  fontWeight: 700,
-                  color: "#111827",
-                  margin: 0,
-                  fontFamily: "'Poppins', sans-serif",
-                }}
-              >
-                Add New Partner
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowAddPartnerModal(false)}
-                data-ocid="admin.close_button"
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#6B7280",
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            {(
-              ["company", "city", "specialization", "phone", "email"] as const
-            ).map((field) => (
-              <div key={field} style={{ marginBottom: "16px" }}>
-                <div
-                  style={{
-                    display: "block",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "#374151",
-                    marginBottom: "6px",
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {field === "company"
-                    ? "Company Name"
-                    : field.charAt(0).toUpperCase() + field.slice(1)}
-                </div>
-                <input
-                  value={newPartner[field]}
-                  onChange={(e) =>
-                    setNewPartner((p) => ({ ...p, [field]: e.target.value }))
-                  }
-                  data-ocid={`admin.${field === "company" ? "input" : "input"}`}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1.5px solid #E5E7EB",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    color: "#111827",
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#1E40AF";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#E5E7EB";
-                  }}
-                />
-              </div>
-            ))}
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                justifyContent: "flex-end",
-                marginTop: "24px",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setShowAddPartnerModal(false)}
-                data-ocid="admin.cancel_button"
-                style={{
-                  padding: "10px 20px",
-                  border: "1.5px solid #E5E7EB",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: "#374151",
-                  background: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleAddPartner}
-                data-ocid="admin.confirm_button"
-                style={{
-                  padding: "10px 20px",
-                  background: "#1E40AF",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                Add Partner
-              </button>
-            </div>
+            Message
+          </div>
+          <div
+            style={{
+              fontSize: "14px",
+              color: "#374151",
+              background: "#f9fafb",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              lineHeight: 1.6,
+            }}
+          >
+            {inquiry.message || "—"}
           </div>
         </div>
-      )}
-
-      <style>{`
-        @media (min-width: 768px) {
-          .md\\:flex { display: flex !important; }
-          .md\\:hidden { display: none !important; }
-          .md\\:ml-\\[240px\\] { margin-left: 240px !important; }
-        }
-      `}</style>
+        <div style={{ marginTop: "20px", textAlign: "center" }}>
+          <StatusBadge
+            status={inquiry.status}
+            colors={inquiryStatusColors[inquiry.status]}
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
 
-function SidebarContent({
-  navItems,
+const NAV_ITEMS = [
+  { id: "overview", label: "Overview", icon: BarChart2 },
+  { id: "inquiries", label: "Booking Inquiries", icon: MessageSquare },
+  { id: "leads", label: "Travel Leads", icon: TrendingUp },
+  { id: "partners", label: "Partners", icon: Users },
+  { id: "plans", label: "B2B Plans", icon: CreditCard },
+  { id: "bookings", label: "Bookings", icon: BookOpen },
+];
+
+function Sidebar({
   activeTab,
   setActiveTab,
-  handleLogout,
+  onClose,
+  isMobile,
 }: {
-  navItems: { id: string; label: string; icon: React.ElementType }[];
   activeTab: string;
-  setActiveTab: (id: string) => void;
-  handleLogout: () => void;
+  setActiveTab: (t: string) => void;
+  onClose?: () => void;
+  isMobile?: boolean;
 }) {
   return (
-    <>
-      <div
-        style={{
-          padding: "20px 16px 16px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
-        <img
-          src="/assets/uploads/Screenshot-2026-03-12-155625-1.png"
-          alt="Travel N World"
-          style={{ height: "40px", objectFit: "contain", marginBottom: "4px" }}
-          onError={(e) => {
-            const el = e.target as HTMLImageElement;
-            el.style.display = "none";
+    <aside
+      style={{
+        width: isMobile ? "100%" : "240px",
+        background: "#0f172a",
+        color: "#f1f5f9",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+      }}
+    >
+      <div style={{ padding: "24px 20px", borderBottom: "1px solid #1e293b" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
-        />
-        <p style={{ fontSize: "11px", color: "#64748b", margin: 0 }}>
-          Admin Panel
-        </p>
+        >
+          <div>
+            <div
+              style={{
+                fontFamily: "Poppins, sans-serif",
+                fontWeight: 800,
+                fontSize: "16px",
+                color: "#fff",
+              }}
+            >
+              Travel N World
+            </div>
+            <div
+              style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}
+            >
+              Admin Dashboard
+            </div>
+          </div>
+          {isMobile && onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#94a3b8",
+                cursor: "pointer",
+              }}
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
       </div>
-      <nav style={{ flex: 1, padding: "12px 8px", overflowY: "auto" }}>
-        {navItems.map((item) => {
+      <nav style={{ flex: 1, padding: "16px 12px" }}>
+        {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
             <button
               type="button"
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
               data-ocid={`admin.${item.id}.tab`}
+              onClick={() => {
+                setActiveTab(item.id);
+                onClose?.();
+              }}
               style={{
-                width: "100%",
                 display: "flex",
                 alignItems: "center",
                 gap: "10px",
+                width: "100%",
                 padding: "10px 12px",
                 borderRadius: "8px",
                 border: "none",
-                background: isActive ? "#1E40AF" : "transparent",
-                color: isActive ? "#ffffff" : "#94a3b8",
-                fontSize: "13px",
-                fontWeight: isActive ? 600 : 400,
                 cursor: "pointer",
-                textAlign: "left",
-                marginBottom: "2px",
-                transition: "all 0.15s",
+                fontFamily: "Inter, sans-serif",
+                fontSize: "14px",
+                fontWeight: isActive ? 600 : 400,
+                background: isActive ? "#1e40af" : "transparent",
+                color: isActive ? "#fff" : "#94a3b8",
+                marginBottom: "4px",
+                transition: "all 0.2s",
               }}
             >
               <Icon size={16} />
@@ -980,315 +636,377 @@ function SidebarContent({
           );
         })}
       </nav>
-      <div
-        style={{
-          padding: "12px 8px",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
-        <button
-          type="button"
-          onClick={handleLogout}
-          data-ocid="admin.delete_button"
+      <div style={{ padding: "16px 12px", borderTop: "1px solid #1e293b" }}>
+        <div
           style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            padding: "10px 12px",
-            borderRadius: "8px",
-            border: "none",
-            background: "transparent",
-            color: "#94a3b8",
-            fontSize: "13px",
-            cursor: "pointer",
-            textAlign: "left",
+            fontSize: "12px",
+            color: "#64748b",
+            padding: "8px 12px",
+            marginBottom: "4px",
           }}
         >
-          <LogOut size={16} />
-          Logout
-        </button>
+          admin@travelnworld.com
+        </div>
       </div>
-    </>
+    </aside>
   );
 }
 
-// ─── Overview ────────────────────────────────────────────────────────────────
+// ─── Overview Tab ─────────────────────────────────────────────────────────────
 
-function OverviewTab() {
+function OverviewTab({
+  partners: _partners,
+  leads: _leads,
+  inquiries,
+  plans,
+}: {
+  partners: PartnerReg[];
+  leads: Lead[];
+  inquiries: BookingInquiry[];
+  plans: PartnerPlan[];
+}) {
   const stats = [
     {
-      label: "Total Partner Registrations",
-      value: "247",
+      label: "Total Travel Partners",
+      value: "500,000+",
       icon: Users,
-      color: "#1E40AF",
-      bg: "#eff6ff",
+      color: "#1e40af",
+      bg: "#dbeafe",
     },
     {
-      label: "Total Travel Leads",
-      value: "12,847",
-      icon: BookOpen,
-      color: "#7C3AED",
-      bg: "#f5f3ff",
+      label: "Total Leads Generated",
+      value: "100,000+",
+      icon: TrendingUp,
+      color: "#059669",
+      bg: "#d1fae5",
+    },
+    {
+      label: "Booking Inquiries",
+      value: "100,000+",
+      icon: MessageSquare,
+      color: "#7c3aed",
+      bg: "#ede9fe",
     },
     {
       label: "Confirmed Bookings",
-      value: "5,234",
+      value: "25,000+",
       icon: CheckCircle,
-      color: "#059669",
-      bg: "#ecfdf5",
+      color: "#0891b2",
+      bg: "#cffafe",
     },
     {
       label: "Active B2B Members",
-      value: "150",
-      icon: Shield,
-      color: "#E53935",
-      bg: "#fff5f5",
+      value: "50,000+",
+      icon: CreditCard,
+      color: "#dc2626",
+      bg: "#fee2e2",
+    },
+    {
+      label: "Daily Platform Reach",
+      value: "150,000+",
+      icon: Globe,
+      color: "#0f766e",
+      bg: "#ccfbf1",
     },
   ];
+
   return (
-    <div>
-      <div style={{ marginBottom: "24px" }}>
-        <h3
-          style={{
-            fontSize: "22px",
-            fontWeight: 700,
-            color: "#111827",
-            margin: "0 0 4px",
-            fontFamily: "'Poppins', sans-serif",
-          }}
-        >
-          Platform Overview
-        </h3>
-        <p style={{ fontSize: "14px", color: "#6B7280", margin: 0 }}>
-          Key metrics for Travel N World platform
-        </p>
-      </div>
+    <div data-ocid="admin.overview.section">
+      <h2
+        style={{
+          fontFamily: "Poppins, sans-serif",
+          fontWeight: 700,
+          fontSize: "22px",
+          color: "#111827",
+          marginBottom: "24px",
+        }}
+      >
+        Platform Overview
+      </h2>
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-          gap: "20px",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: "16px",
           marginBottom: "32px",
         }}
       >
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
+        {stats.map((s) => {
+          const Icon = s.icon;
           return (
             <div
-              key={stat.label}
-              data-ocid={`admin.overview.card.${i + 1}`}
+              key={s.label}
               style={{
-                background: "#ffffff",
+                background: "#fff",
+                border: "1px solid #e5e7eb",
                 borderRadius: "12px",
-                padding: "24px",
-                boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
-                border: "1px solid #f1f5f9",
+                padding: "20px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "14px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               }}
             >
               <div
                 style={{
-                  width: "44px",
-                  height: "44px",
+                  background: s.bg,
                   borderRadius: "10px",
-                  background: stat.bg,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "16px",
+                  padding: "10px",
+                  flexShrink: 0,
                 }}
               >
-                <Icon size={20} color={stat.color} />
+                <Icon size={22} color={s.color} />
               </div>
-              <div
-                style={{
-                  fontSize: "28px",
-                  fontWeight: 800,
-                  color: "#111827",
-                  fontFamily: "'Poppins', sans-serif",
-                  lineHeight: 1.1,
-                }}
-              >
-                {stat.value}
-              </div>
-              <div
-                style={{ fontSize: "13px", color: "#6B7280", marginTop: "6px" }}
-              >
-                {stat.label}
+              <div>
+                <div
+                  style={{
+                    fontFamily: "Poppins, sans-serif",
+                    fontWeight: 800,
+                    fontSize: "28px",
+                    color: s.color,
+                    lineHeight: 1,
+                  }}
+                >
+                  {s.value}
+                </div>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "#6b7280",
+                    marginTop: "4px",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {s.label}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Recent activity */}
       <div
         style={{
-          background: "#ffffff",
-          borderRadius: "12px",
-          padding: "24px",
-          boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
-          border: "1px solid #f1f5f9",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: "20px",
         }}
       >
-        <h4
+        <div
           style={{
-            fontSize: "16px",
-            fontWeight: 700,
-            color: "#111827",
-            margin: "0 0 16px",
-            fontFamily: "'Poppins', sans-serif",
+            background: "#fff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "12px",
+            padding: "20px",
           }}
         >
-          Recent Activity
-        </h4>
-        {[
-          {
-            text: "New partner registration: Horizon Travels (Delhi)",
-            time: "2 mins ago",
-            color: "#1E40AF",
-          },
-          {
-            text: "Lead assigned to SkyWing Tours – Dubai Package",
-            time: "15 mins ago",
-            color: "#059669",
-          },
-          {
-            text: "Booking confirmed – Kerala Tour – ₹70,000",
-            time: "1 hour ago",
-            color: "#059669",
-          },
-          {
-            text: "Partner registration rejected: BlueSky Holidays",
-            time: "3 hours ago",
-            color: "#dc2626",
-          },
-          {
-            text: "New travel lead: Europe Tour – Budget ₹4,50,000",
-            time: "5 hours ago",
-            color: "#7C3AED",
-          },
-        ].map((item) => (
-          <div
-            key={item.text}
+          <h3
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "12px 0",
-              borderBottom: "1px solid #f1f5f9",
+              fontFamily: "Poppins, sans-serif",
+              fontWeight: 700,
+              fontSize: "16px",
+              color: "#111827",
+              marginBottom: "16px",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
-                style={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  background: item.color,
-                  flexShrink: 0,
-                }}
-              />
-              <span style={{ fontSize: "13px", color: "#374151" }}>
-                {item.text}
-              </span>
-            </div>
-            <span
+            Recent Inquiries
+          </h3>
+          {inquiries.slice(0, 4).map((inq) => (
+            <div
+              key={inq.id}
               style={{
-                fontSize: "12px",
-                color: "#9CA3AF",
-                flexShrink: 0,
-                marginLeft: "12px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "10px 0",
+                borderBottom: "1px solid #f3f4f6",
               }}
             >
-              {item.time}
-            </span>
-          </div>
-        ))}
+              <div>
+                <div
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    color: "#111827",
+                  }}
+                >
+                  {inq.customerName}
+                </div>
+                <div style={{ fontSize: "12px", color: "#9ca3af" }}>
+                  {inq.destination} · {inq.travelDate}
+                </div>
+              </div>
+              <StatusBadge
+                status={inq.status}
+                colors={inquiryStatusColors[inq.status]}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "12px",
+            padding: "20px",
+          }}
+        >
+          <h3
+            style={{
+              fontFamily: "Poppins, sans-serif",
+              fontWeight: 700,
+              fontSize: "16px",
+              color: "#111827",
+              marginBottom: "16px",
+            }}
+          >
+            Plan Summary
+          </h3>
+          {(["Starter", "Professional", "Premium"] as PlanType[]).map((pt) => {
+            const count = plans.filter((p) => p.planType === pt).length;
+            const c = planTypeColors[pt];
+            return (
+              <div
+                key={pt}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "10px 0",
+                  borderBottom: "1px solid #f3f4f6",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: c.color,
+                    background: c.bg,
+                    padding: "3px 10px",
+                    borderRadius: "20px",
+                    border: `1px solid ${c.border}`,
+                  }}
+                >
+                  {pt}
+                </span>
+                <span style={{ fontWeight: 700, color: "#111827" }}>
+                  {count} partners
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── Registrations ────────────────────────────────────────────────────────────
+// ─── Booking Inquiries Tab ────────────────────────────────────────────────────
 
-function RegistrationsTab({
-  registrations,
-  onStatusChange,
-  onRefresh,
+function InquiriesTab({
+  inquiries,
+  setInquiries,
 }: {
-  registrations: PartnerReg[];
-  onStatusChange: (id: number, status: PartnerStatus) => void;
-  onRefresh: () => void;
+  inquiries: BookingInquiry[];
+  setInquiries: (i: BookingInquiry[]) => void;
 }) {
-  const newCount = registrations.filter((r) => r.isNew).length;
+  const [search, setSearch] = useState("");
+  const [viewInquiry, setViewInquiry] = useState<BookingInquiry | null>(null);
+  const [assignId, setAssignId] = useState<number | null>(null);
+  const [assignValue, setAssignValue] = useState("");
+
+  const filtered = inquiries.filter(
+    (i) =>
+      i.status !== "Deleted" &&
+      (i.customerName.toLowerCase().includes(search.toLowerCase()) ||
+        i.destination.toLowerCase().includes(search.toLowerCase())),
+  );
+
+  const updateStatus = (id: number, status: InquiryStatus) =>
+    setInquiries(inquiries.map((i) => (i.id === id ? { ...i, status } : i)));
+
+  const doAssign = (id: number) => {
+    setInquiries(
+      inquiries.map((i) =>
+        i.id === id ? { ...i, assignedTo: assignValue } : i,
+      ),
+    );
+    setAssignId(null);
+    setAssignValue("");
+  };
+
   return (
-    <div>
+    <div data-ocid="admin.inquiries.section">
+      {viewInquiry && (
+        <InquiryModal
+          inquiry={viewInquiry}
+          onClose={() => setViewInquiry(null)}
+        />
+      )}
       <div
         style={{
           display: "flex",
-          alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: "24px",
+          alignItems: "center",
+          marginBottom: "20px",
           flexWrap: "wrap",
           gap: "12px",
         }}
       >
-        <div>
-          <h3
-            style={{
-              fontSize: "20px",
-              fontWeight: 700,
-              color: "#111827",
-              margin: "0 0 4px",
-              fontFamily: "'Poppins', sans-serif",
-            }}
-          >
-            Partner Registrations
-          </h3>
-          <p style={{ fontSize: "13px", color: "#6B7280", margin: 0 }}>
-            {registrations.length} total registrations
-            {newCount > 0 && (
-              <span
-                style={{ color: "#059669", fontWeight: 600, marginLeft: "8px" }}
-              >
-                · {newCount} new from form
-              </span>
-            )}
-          </p>
-        </div>
-        <button
-          type="button"
-          data-ocid="admin.registrations.secondary_button"
-          onClick={onRefresh}
+        <h2
           style={{
-            background: "#eff6ff",
-            color: "#1E40AF",
-            border: "1px solid #bfdbfe",
-            borderRadius: "8px",
-            padding: "8px 16px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
+            fontFamily: "Poppins, sans-serif",
+            fontWeight: 700,
+            fontSize: "22px",
+            color: "#111827",
           }}
         >
-          ↻ Refresh
-        </button>
+          Booking Inquiries
+        </h2>
+        <div style={{ position: "relative" }}>
+          <Search
+            size={16}
+            style={{
+              position: "absolute",
+              left: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "#9ca3af",
+            }}
+          />
+          <input
+            data-ocid="inquiries.search_input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search inquiries..."
+            style={{
+              paddingLeft: "34px",
+              paddingRight: "12px",
+              height: "38px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              fontSize: "14px",
+              outline: "none",
+              width: "220px",
+            }}
+          />
+        </div>
       </div>
+
       <div
         style={{
           background: "#fff",
           borderRadius: "12px",
-          boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
-          border: "1px solid #f1f5f9",
-          overflowX: "auto",
+          border: "1px solid #e5e7eb",
+          overflow: "auto",
         }}
       >
         <table
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            minWidth: "800px",
+            fontSize: "14px",
           }}
         >
           <thead>
@@ -1299,13 +1017,14 @@ function RegistrationsTab({
               }}
             >
               {[
-                "Name",
-                "Company Name",
+                "Customer",
                 "Phone",
                 "Email",
-                "City",
-                "Experience",
-                "Date",
+                "Destination",
+                "Travel Date",
+                "Travelers",
+                "Budget",
+                "Inquiry Date",
                 "Status",
                 "Actions",
               ].map((h) => (
@@ -1314,11 +1033,10 @@ function RegistrationsTab({
                   style={{
                     padding: "12px 16px",
                     textAlign: "left",
-                    fontSize: "12px",
                     fontWeight: 600,
-                    color: "#6B7280",
+                    color: "#374151",
+                    fontSize: "12px",
                     textTransform: "uppercase",
-                    letterSpacing: "0.04em",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -1328,16 +1046,31 @@ function RegistrationsTab({
             </tr>
           </thead>
           <tbody>
-            {registrations.map((r, i) => (
+            {filtered.length === 0 && (
+              <tr>
+                <td
+                  colSpan={10}
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "#9ca3af",
+                  }}
+                  data-ocid="inquiries.empty_state"
+                >
+                  No inquiries found.
+                </td>
+              </tr>
+            )}
+            {filtered.map((inq, idx) => (
               <tr
-                key={r.id}
-                data-ocid={`admin.registrations.row.${i + 1}`}
+                key={inq.id}
+                data-ocid={`inquiries.row.${idx + 1}`}
                 style={{
-                  borderBottom: "1px solid #f1f5f9",
-                  transition: "background 0.1s",
+                  borderBottom: "1px solid #f3f4f6",
+                  transition: "background 0.15s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
+                  e.currentTarget.style.background = "#f9fafb";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "transparent";
@@ -1345,132 +1078,231 @@ function RegistrationsTab({
               >
                 <td
                   style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
+                    padding: "12px 16px",
+                    fontWeight: 600,
                     color: "#111827",
-                    fontWeight: 500,
-                    whiteSpace: "nowrap",
                   }}
                 >
-                  {r.name}
+                  {inq.customerName}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {inq.phone}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {inq.email}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {inq.destination}
                 </td>
                 <td
                   style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
+                    padding: "12px 16px",
                     color: "#374151",
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {r.company}
+                  {inq.travelDate}
                 </td>
                 <td
                   style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
+                    padding: "12px 16px",
+                    color: "#374151",
+                    textAlign: "center",
+                  }}
+                >
+                  {inq.travelers}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {inq.budget}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
                     color: "#374151",
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {r.phone}
+                  {inq.inquiryDate}
                 </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                  }}
-                >
-                  {r.email}
-                </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {r.city}
-                </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {r.experience || "—"}
-                </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    {r.date}
-                    {r.isNew && (
-                      <span
-                        style={{
-                          background: "#dcfce7",
-                          color: "#166534",
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          padding: "1px 6px",
-                          borderRadius: "10px",
-                          letterSpacing: "0.04em",
-                        }}
-                      >
-                        NEW
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td style={{ padding: "14px 16px" }}>
+                <td style={{ padding: "12px 16px" }}>
                   <StatusBadge
-                    status={r.status}
-                    colors={statusColors[r.status]}
+                    status={inq.status}
+                    colors={inquiryStatusColors[inq.status]}
                   />
                 </td>
-                <td style={{ padding: "14px 16px" }}>
-                  <div
-                    style={{ display: "flex", gap: "6px", flexWrap: "nowrap" }}
-                  >
-                    <ActionBtn
-                      color="#059669"
-                      bg="#ecfdf5"
-                      onClick={() => onStatusChange(r.id, "Approved")}
-                      ocid={`admin.registrations.secondary_button.${i + 1}`}
+                <td style={{ padding: "12px 16px" }}>
+                  {assignId === inq.id ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        alignItems: "center",
+                      }}
                     >
-                      Approve
-                    </ActionBtn>
-                    <ActionBtn
-                      color="#dc2626"
-                      bg="#fef2f2"
-                      onClick={() => onStatusChange(r.id, "Rejected")}
-                      ocid={`admin.registrations.delete_button.${i + 1}`}
+                      <select
+                        data-ocid="inquiries.assign.select"
+                        value={assignValue}
+                        onChange={(e) => setAssignValue(e.target.value)}
+                        style={{
+                          fontSize: "13px",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "6px",
+                          padding: "4px 8px",
+                        }}
+                      >
+                        <option value="">Select Partner</option>
+                        {PARTNER_NAMES.map((p) => (
+                          <option key={p}>{p}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        data-ocid="inquiries.assign.confirm_button"
+                        onClick={() => doAssign(inq.id)}
+                        style={{
+                          background: "#1e40af",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "4px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        OK
+                      </button>
+                      <button
+                        type="button"
+                        data-ocid="inquiries.assign.cancel_button"
+                        onClick={() => setAssignId(null)}
+                        style={{
+                          background: "#f3f4f6",
+                          color: "#374151",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "4px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}
                     >
-                      Reject
-                    </ActionBtn>
-                    <ActionBtn
-                      color="#1E40AF"
-                      bg="#eff6ff"
-                      onClick={() => onStatusChange(r.id, "Verified")}
-                      ocid={`admin.registrations.primary_button.${i + 1}`}
-                    >
-                      Verify
-                    </ActionBtn>
-                  </div>
+                      <button
+                        type="button"
+                        data-ocid={`inquiries.view.button.${idx + 1}`}
+                        onClick={() => setViewInquiry(inq)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "#eff6ff",
+                          color: "#1e40af",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          fontWeight: 500,
+                        }}
+                      >
+                        <Eye size={13} />
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        data-ocid={`inquiries.assign.button.${idx + 1}`}
+                        onClick={() => {
+                          setAssignId(inq.id);
+                          setAssignValue(inq.assignedTo || "");
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "#f0fdf4",
+                          color: "#166534",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          fontWeight: 500,
+                        }}
+                      >
+                        <Users size={13} />
+                        Assign
+                      </button>
+                      {inq.status !== "Contacted" &&
+                        inq.status !== "Confirmed" && (
+                          <button
+                            type="button"
+                            data-ocid={`inquiries.contacted.button.${idx + 1}`}
+                            onClick={() => updateStatus(inq.id, "Contacted")}
+                            style={{
+                              background: "#fef9c3",
+                              color: "#854d0e",
+                              border: "none",
+                              borderRadius: "6px",
+                              padding: "5px 10px",
+                              fontSize: "12px",
+                              cursor: "pointer",
+                              fontWeight: 500,
+                            }}
+                          >
+                            Contacted
+                          </button>
+                        )}
+                      {inq.status !== "Confirmed" && (
+                        <button
+                          type="button"
+                          data-ocid={`inquiries.confirm.button.${idx + 1}`}
+                          onClick={() => updateStatus(inq.id, "Confirmed")}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            background: "#d1fae5",
+                            color: "#065f46",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                          }}
+                        >
+                          <CheckCircle size={13} />
+                          Confirm
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        data-ocid={`inquiries.delete.button.${idx + 1}`}
+                        onClick={() => updateStatus(inq.id, "Deleted")}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "#fee2e2",
+                          color: "#991b1b",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          fontWeight: 500,
+                        }}
+                      >
+                        <Trash2 size={13} />
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -1481,95 +1313,102 @@ function RegistrationsTab({
   );
 }
 
-// ─── Leads ────────────────────────────────────────────────────────────────────
+// ─── Travel Leads Tab ─────────────────────────────────────────────────────────
 
 function LeadsTab({
   leads,
-  search,
-  setSearch,
-  onAssign,
-}: {
-  leads: Lead[];
-  search: string;
-  setSearch: (s: string) => void;
-  onAssign: (id: number, partner: string) => void;
-}) {
+  setLeads,
+}: { leads: Lead[]; setLeads: (l: Lead[]) => void }) {
+  const [search, setSearch] = useState("");
+  const [assignId, setAssignId] = useState<number | null>(null);
+  const [assignValue, setAssignValue] = useState("");
+
+  const filtered = leads.filter(
+    (l) =>
+      l.customer.toLowerCase().includes(search.toLowerCase()) ||
+      l.destination.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const updateLead = (id: number, patch: Partial<Lead>) =>
+    setLeads(leads.map((l) => (l.id === id ? { ...l, ...patch } : l)));
+
+  const doAssign = (id: number) => {
+    updateLead(id, { assignedTo: assignValue });
+    setAssignId(null);
+    setAssignValue("");
+  };
+
+  const sourceColor: Record<string, { bg: string; color: string }> = {
+    Website: { bg: "#eff6ff", color: "#1e40af" },
+    WhatsApp: { bg: "#f0fdf4", color: "#166534" },
+    Form: { bg: "#faf5ff", color: "#6b21a8" },
+  };
+
   return (
-    <div>
+    <div data-ocid="admin.leads.section">
       <div
         style={{
           display: "flex",
-          alignItems: "center",
           justifyContent: "space-between",
+          alignItems: "center",
           marginBottom: "20px",
           flexWrap: "wrap",
           gap: "12px",
         }}
       >
-        <div>
-          <h3
-            style={{
-              fontSize: "20px",
-              fontWeight: 700,
-              color: "#111827",
-              margin: "0 0 4px",
-              fontFamily: "'Poppins', sans-serif",
-            }}
-          >
-            Travel Leads
-          </h3>
-          <p style={{ fontSize: "13px", color: "#6B7280", margin: 0 }}>
-            {leads.length} active leads
-          </p>
-        </div>
+        <h2
+          style={{
+            fontFamily: "Poppins, sans-serif",
+            fontWeight: 700,
+            fontSize: "22px",
+            color: "#111827",
+          }}
+        >
+          Travel Leads
+        </h2>
         <div style={{ position: "relative" }}>
           <Search
-            size={15}
-            color="#9CA3AF"
+            size={16}
             style={{
               position: "absolute",
-              left: "12px",
+              left: "10px",
               top: "50%",
               transform: "translateY(-50%)",
+              color: "#9ca3af",
             }}
           />
           <input
+            data-ocid="leads.search_input"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search leads..."
-            data-ocid="admin.leads.search_input"
             style={{
-              padding: "9px 14px 9px 36px",
-              border: "1.5px solid #E5E7EB",
+              paddingLeft: "34px",
+              paddingRight: "12px",
+              height: "38px",
+              border: "1px solid #e5e7eb",
               borderRadius: "8px",
-              fontSize: "13px",
+              fontSize: "14px",
               outline: "none",
-              color: "#374151",
               width: "220px",
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "#1E40AF";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "#E5E7EB";
             }}
           />
         </div>
       </div>
+
       <div
         style={{
           background: "#fff",
           borderRadius: "12px",
-          boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
-          border: "1px solid #f1f5f9",
-          overflowX: "auto",
+          border: "1px solid #e5e7eb",
+          overflow: "auto",
         }}
       >
         <table
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            minWidth: "900px",
+            fontSize: "14px",
           }}
         >
           <thead>
@@ -1582,23 +1421,22 @@ function LeadsTab({
               {[
                 "Customer",
                 "Destination",
-                "Travel Date",
-                "Travelers",
                 "Budget",
-                "Phone",
+                "Travel Date",
+                "Lead Source",
                 "Assigned To",
-                "Action",
+                "Status",
+                "Actions",
               ].map((h) => (
                 <th
                   key={h}
                   style={{
                     padding: "12px 16px",
                     textAlign: "left",
-                    fontSize: "12px",
                     fontWeight: 600,
-                    color: "#6B7280",
+                    color: "#374151",
+                    fontSize: "12px",
                     textTransform: "uppercase",
-                    letterSpacing: "0.04em",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -1608,13 +1446,28 @@ function LeadsTab({
             </tr>
           </thead>
           <tbody>
-            {leads.map((l, i) => (
+            {filtered.length === 0 && (
+              <tr>
+                <td
+                  colSpan={8}
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "#9ca3af",
+                  }}
+                  data-ocid="leads.empty_state"
+                >
+                  No leads found.
+                </td>
+              </tr>
+            )}
+            {filtered.map((lead, idx) => (
               <tr
-                key={l.id}
-                data-ocid={`admin.leads.row.${i + 1}`}
-                style={{ borderBottom: "1px solid #f1f5f9" }}
+                key={lead.id}
+                data-ocid={`leads.row.${idx + 1}`}
+                style={{ borderBottom: "1px solid #f3f4f6" }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
+                  e.currentTarget.style.background = "#f9fafb";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "transparent";
@@ -1622,104 +1475,194 @@ function LeadsTab({
               >
                 <td
                   style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
+                    padding: "12px 16px",
+                    fontWeight: 600,
                     color: "#111827",
-                    fontWeight: 500,
-                    whiteSpace: "nowrap",
                   }}
                 >
-                  {l.customer}
-                </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {l.destination}
-                </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {l.travelDate}
-                </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    textAlign: "center",
-                  }}
-                >
-                  {l.travelers}
-                </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {l.budget}
-                </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {l.phone}
-                </td>
-                <td style={{ padding: "14px 16px" }}>
-                  <select
-                    value={l.assignedTo}
-                    onChange={(e) => onAssign(l.id, e.target.value)}
-                    data-ocid={`admin.leads.select.${i + 1}`}
-                    style={{
-                      padding: "6px 10px",
-                      border: "1.5px solid #E5E7EB",
-                      borderRadius: "6px",
-                      fontSize: "12px",
-                      color: "#374151",
-                      outline: "none",
-                      background: "#fff",
-                      cursor: "pointer",
-                      minWidth: "140px",
-                    }}
-                  >
-                    <option value="">-- Assign Partner --</option>
-                    {PARTNER_NAMES.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td style={{ padding: "14px 16px" }}>
-                  {l.assignedTo && (
+                  {lead.customer}
+                  {lead.isNew && (
                     <span
                       style={{
-                        fontSize: "11px",
+                        marginLeft: "6px",
                         background: "#dcfce7",
                         color: "#166534",
-                        padding: "3px 8px",
-                        borderRadius: "20px",
-                        fontWeight: 600,
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        padding: "2px 6px",
+                        borderRadius: "10px",
                       }}
                     >
-                      Assigned
+                      NEW
                     </span>
+                  )}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {lead.destination}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {lead.budget}
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    color: "#374151",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {lead.travelDate}
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  {lead.leadSource && (
+                    <StatusBadge
+                      status={lead.leadSource}
+                      colors={
+                        sourceColor[lead.leadSource] || {
+                          bg: "#f3f4f6",
+                          color: "#374151",
+                        }
+                      }
+                    />
+                  )}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {lead.assignedTo || (
+                    <span style={{ color: "#d1d5db" }}>Unassigned</span>
+                  )}
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  <StatusBadge
+                    status={lead.status || "Active"}
+                    colors={
+                      leadStatusColors[(lead.status || "Active") as LeadStatus]
+                    }
+                  />
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  {assignId === lead.id ? (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "6px",
+                        alignItems: "center",
+                      }}
+                    >
+                      <select
+                        data-ocid="leads.assign.select"
+                        value={assignValue}
+                        onChange={(e) => setAssignValue(e.target.value)}
+                        style={{
+                          fontSize: "13px",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "6px",
+                          padding: "4px 8px",
+                        }}
+                      >
+                        <option value="">Select Partner</option>
+                        {PARTNER_NAMES.map((p) => (
+                          <option key={p}>{p}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        data-ocid="leads.assign.confirm_button"
+                        onClick={() => doAssign(lead.id)}
+                        style={{
+                          background: "#1e40af",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "4px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        OK
+                      </button>
+                      <button
+                        type="button"
+                        data-ocid="leads.assign.cancel_button"
+                        onClick={() => setAssignId(null)}
+                        style={{
+                          background: "#f3f4f6",
+                          color: "#374151",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "4px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}
+                    >
+                      <button
+                        type="button"
+                        data-ocid={`leads.assign.button.${idx + 1}`}
+                        onClick={() => {
+                          setAssignId(lead.id);
+                          setAssignValue(lead.assignedTo || "");
+                        }}
+                        style={{
+                          background: "#eff6ff",
+                          color: "#1e40af",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          fontWeight: 500,
+                        }}
+                      >
+                        Assign
+                      </button>
+                      {lead.status !== "Converted" && (
+                        <button
+                          type="button"
+                          data-ocid={`leads.convert.button.${idx + 1}`}
+                          onClick={() =>
+                            updateLead(lead.id, { status: "Converted" })
+                          }
+                          style={{
+                            background: "#dbeafe",
+                            color: "#1e40af",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                          }}
+                        >
+                          Convert
+                        </button>
+                      )}
+                      {lead.status !== "Archived" && (
+                        <button
+                          type="button"
+                          data-ocid={`leads.archive.button.${idx + 1}`}
+                          onClick={() =>
+                            updateLead(lead.id, { status: "Archived" })
+                          }
+                          style={{
+                            background: "#f3f4f6",
+                            color: "#6b7280",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                          }}
+                        >
+                          Archive
+                        </button>
+                      )}
+                    </div>
                   )}
                 </td>
               </tr>
@@ -1731,41 +1674,1041 @@ function LeadsTab({
   );
 }
 
-// ─── Bookings ─────────────────────────────────────────────────────────────────
+// ─── Partners Tab ─────────────────────────────────────────────────────────────
 
-function BookingsTab() {
+function PartnersTab({
+  partners,
+  setPartners,
+}: { partners: PartnerReg[]; setPartners: (p: PartnerReg[]) => void }) {
+  const [search, setSearch] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editData, setEditData] = useState<Partial<PartnerReg>>({});
+
+  const filtered = partners.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.company.toLowerCase().includes(search.toLowerCase()) ||
+      p.city.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const update = (id: number, patch: Partial<PartnerReg>) => {
+    const updated = partners.map((p) =>
+      p.id === id ? { ...p, ...patch, isNew: false } : p,
+    );
+    setPartners(updated);
+    updatePartnerStatus(
+      id,
+      (patch.status ||
+        partners.find((p) => p.id === id)?.status) as PartnerStatus,
+    );
+  };
+
+  const remove = (id: number) =>
+    setPartners(partners.filter((p) => p.id !== id));
+
+  const saveEdit = () => {
+    if (editingId) {
+      update(editingId, editData);
+      setEditingId(null);
+    }
+  };
+
   return (
-    <div>
-      <div style={{ marginBottom: "24px" }}>
-        <h3
+    <div data-ocid="admin.partners.section">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <h2
           style={{
-            fontSize: "20px",
+            fontFamily: "Poppins, sans-serif",
             fontWeight: 700,
+            fontSize: "22px",
             color: "#111827",
-            margin: "0 0 4px",
-            fontFamily: "'Poppins', sans-serif",
           }}
         >
-          Booking Management
-        </h3>
-        <p style={{ fontSize: "13px", color: "#6B7280", margin: 0 }}>
-          {BOOKINGS.length} total bookings
-        </p>
+          Partners Management
+        </h2>
+        <div style={{ position: "relative" }}>
+          <Search
+            size={16}
+            style={{
+              position: "absolute",
+              left: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "#9ca3af",
+            }}
+          />
+          <input
+            data-ocid="partners.search_input"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search partners..."
+            style={{
+              paddingLeft: "34px",
+              paddingRight: "12px",
+              height: "38px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              fontSize: "14px",
+              outline: "none",
+              width: "220px",
+            }}
+          />
+        </div>
       </div>
+
       <div
         style={{
           background: "#fff",
           borderRadius: "12px",
-          boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
-          border: "1px solid #f1f5f9",
-          overflowX: "auto",
+          border: "1px solid #e5e7eb",
+          overflow: "auto",
         }}
       >
         <table
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            minWidth: "800px",
+            fontSize: "14px",
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                background: "#f8fafc",
+                borderBottom: "1px solid #e5e7eb",
+              }}
+            >
+              {[
+                "Company Name",
+                "City",
+                "Phone",
+                "Email",
+                "Plan Status",
+                "Join Date",
+                "Status",
+                "Actions",
+              ].map((h) => (
+                <th
+                  key={h}
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "left",
+                    fontWeight: 600,
+                    color: "#374151",
+                    fontSize: "12px",
+                    textTransform: "uppercase",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 && (
+              <tr>
+                <td
+                  colSpan={8}
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "#9ca3af",
+                  }}
+                  data-ocid="partners.empty_state"
+                >
+                  No partners found.
+                </td>
+              </tr>
+            )}
+            {filtered.map((p, idx) => (
+              <tr
+                key={p.id}
+                data-ocid={`partners.row.${idx + 1}`}
+                style={{ borderBottom: "1px solid #f3f4f6" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#f9fafb";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <td style={{ padding: "12px 16px" }}>
+                  {editingId === p.id ? (
+                    <input
+                      value={editData.company ?? p.company}
+                      onChange={(e) =>
+                        setEditData({ ...editData, company: e.target.value })
+                      }
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "6px",
+                        padding: "4px 8px",
+                        width: "130px",
+                        fontSize: "13px",
+                      }}
+                    />
+                  ) : (
+                    <span style={{ fontWeight: 600, color: "#111827" }}>
+                      {p.company}
+                      {p.isNew && (
+                        <span
+                          style={{
+                            marginLeft: "6px",
+                            background: "#dcfce7",
+                            color: "#166534",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            padding: "2px 6px",
+                            borderRadius: "10px",
+                          }}
+                        >
+                          NEW
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {editingId === p.id ? (
+                    <input
+                      value={editData.city ?? p.city}
+                      onChange={(e) =>
+                        setEditData({ ...editData, city: e.target.value })
+                      }
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "6px",
+                        padding: "4px 8px",
+                        width: "90px",
+                        fontSize: "13px",
+                      }}
+                    />
+                  ) : (
+                    p.city
+                  )}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {editingId === p.id ? (
+                    <input
+                      value={editData.phone ?? p.phone}
+                      onChange={(e) =>
+                        setEditData({ ...editData, phone: e.target.value })
+                      }
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "6px",
+                        padding: "4px 8px",
+                        width: "130px",
+                        fontSize: "13px",
+                      }}
+                    />
+                  ) : (
+                    p.phone
+                  )}
+                </td>
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
+                  {p.email}
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color:
+                        p.planStatus && p.planStatus !== "None"
+                          ? "#1e40af"
+                          : "#9ca3af",
+                    }}
+                  >
+                    {p.planStatus || "None"}
+                  </span>
+                </td>
+                <td
+                  style={{
+                    padding: "12px 16px",
+                    color: "#374151",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {p.date}
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  <StatusBadge
+                    status={p.status}
+                    colors={statusColors[p.status]}
+                  />
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  {editingId === p.id ? (
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <button
+                        type="button"
+                        data-ocid={`partners.save.button.${idx + 1}`}
+                        onClick={saveEdit}
+                        style={{
+                          background: "#1e40af",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          fontWeight: 500,
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        data-ocid={`partners.cancel.button.${idx + 1}`}
+                        onClick={() => setEditingId(null)}
+                        style={{
+                          background: "#f3f4f6",
+                          color: "#374151",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}
+                    >
+                      {p.status === "Pending" && (
+                        <button
+                          type="button"
+                          data-ocid={`partners.approve.button.${idx + 1}`}
+                          onClick={() => update(p.id, { status: "Approved" })}
+                          style={{
+                            background: "#dcfce7",
+                            color: "#166534",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                          }}
+                        >
+                          Approve
+                        </button>
+                      )}
+                      {p.status !== "Rejected" && p.status !== "Verified" && (
+                        <button
+                          type="button"
+                          data-ocid={`partners.reject.button.${idx + 1}`}
+                          onClick={() => update(p.id, { status: "Rejected" })}
+                          style={{
+                            background: "#fee2e2",
+                            color: "#991b1b",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                          }}
+                        >
+                          Reject
+                        </button>
+                      )}
+                      {p.status === "Approved" && (
+                        <button
+                          type="button"
+                          data-ocid={`partners.verify.button.${idx + 1}`}
+                          onClick={() => update(p.id, { status: "Verified" })}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            background: "#dbeafe",
+                            color: "#1e3a8a",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            fontWeight: 500,
+                          }}
+                        >
+                          <Shield size={12} />
+                          Verify
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        data-ocid={`partners.edit.button.${idx + 1}`}
+                        onClick={() => {
+                          setEditingId(p.id);
+                          setEditData({});
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "#f3f4f6",
+                          color: "#374151",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <Edit size={12} />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        data-ocid={`partners.delete.button.${idx + 1}`}
+                        onClick={() => remove(p.id)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          background: "#fee2e2",
+                          color: "#991b1b",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <Trash2 size={12} />
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── B2B Plans Tab ────────────────────────────────────────────────────────────
+
+const PLANS_PAGE_SIZE = 50;
+
+function PlansTab({
+  plans,
+  setPlans,
+}: { plans: PartnerPlan[]; setPlans: (p: PartnerPlan[]) => void }) {
+  const [page, setPage] = useState(1);
+  const [filterPlan, setFilterPlan] = useState<PlanType | "All">("All");
+  const [filterStatus, setFilterStatus] = useState<PlanStatus | "All">("All");
+  const [search, setSearch] = useState("");
+
+  const exportToExcel = () => {
+    const exportData = plans.map((p) => ({
+      "Partner Name": p.partnerName,
+      "Company Name": p.company,
+      City: p.city || "",
+      "Membership Plan": p.planType,
+      "Plan Price": p.price,
+      "Start Date": p.startDate,
+      "Expiry Date": p.expiryDate,
+      "Payment Status": p.paymentStatus,
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Partners");
+    XLSX.writeFile(wb, "travelnworld-partners-data.xlsx");
+  };
+
+  const toggle = (id: number) =>
+    setPlans(
+      plans.map((p) =>
+        p.id === id
+          ? { ...p, status: p.status === "Active" ? "Inactive" : "Active" }
+          : p,
+      ),
+    );
+
+  const filtered = plans.filter((p) => {
+    if (filterPlan !== "All" && p.planType !== filterPlan) return false;
+    if (filterStatus !== "All" && p.status !== filterStatus) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (
+        !p.partnerName.toLowerCase().includes(q) &&
+        !p.company.toLowerCase().includes(q) &&
+        !(p.city || "").toLowerCase().includes(q)
+      )
+        return false;
+    }
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PLANS_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice(
+    (safePage - 1) * PLANS_PAGE_SIZE,
+    safePage * PLANS_PAGE_SIZE,
+  );
+
+  return (
+    <div data-ocid="admin.plans.section">
+      <div style={{ marginBottom: "20px" }}>
+        <h2
+          style={{
+            fontFamily: "Poppins, sans-serif",
+            fontWeight: 700,
+            fontSize: "22px",
+            color: "#111827",
+            marginBottom: "8px",
+          }}
+        >
+          B2B Membership Plans
+        </h2>
+        <div
+          style={{
+            display: "flex",
+            gap: "16px",
+            flexWrap: "wrap",
+            marginBottom: "20px",
+          }}
+        >
+          {(["Starter", "Professional", "Premium"] as PlanType[]).map((pt) => {
+            const c = planTypeColors[pt];
+            const prices: Record<PlanType, string> = {
+              Starter: "₹3,000 / 3 Months",
+              Professional: "₹6,000 / 6 Months",
+              Premium: "₹12,000 / 1 Year",
+            };
+            const activeCount = plans.filter(
+              (p) => p.planType === pt && p.status === "Active",
+            ).length;
+            const totalCount = plans.filter((p) => p.planType === pt).length;
+            return (
+              <div
+                key={pt}
+                style={{
+                  background: c.bg,
+                  border: `2px solid ${c.border}`,
+                  borderRadius: "12px",
+                  padding: "16px 24px",
+                  minWidth: "200px",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "Poppins, sans-serif",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    color: c.color,
+                  }}
+                >
+                  {pt}
+                </div>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: c.color,
+                    marginTop: "4px",
+                    opacity: 0.8,
+                  }}
+                >
+                  {prices[pt]}
+                </div>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: "26px",
+                    color: c.color,
+                    marginTop: "6px",
+                  }}
+                >
+                  {activeCount.toLocaleString()}
+                </div>
+                <div style={{ fontSize: "12px", color: c.color, opacity: 0.7 }}>
+                  {activeCount.toLocaleString()} active /{" "}
+                  {totalCount.toLocaleString()} total
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Filters */}
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            flexWrap: "wrap",
+            alignItems: "center",
+            marginBottom: "12px",
+          }}
+        >
+          <input
+            type="text"
+            placeholder="Search partner or company..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            data-ocid="plans.search_input"
+            style={{
+              padding: "8px 12px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              fontSize: "14px",
+              width: "220px",
+            }}
+          />
+          <select
+            value={filterPlan}
+            onChange={(e) => {
+              setFilterPlan(e.target.value as PlanType | "All");
+              setPage(1);
+            }}
+            data-ocid="plans.plan_type.select"
+            style={{
+              padding: "8px 12px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              fontSize: "14px",
+            }}
+          >
+            <option value="All">All Plans</option>
+            <option value="Starter">Starter</option>
+            <option value="Professional">Professional</option>
+            <option value="Premium">Premium</option>
+          </select>
+          <select
+            value={filterStatus}
+            onChange={(e) => {
+              setFilterStatus(e.target.value as PlanStatus | "All");
+              setPage(1);
+            }}
+            data-ocid="plans.status.select"
+            style={{
+              padding: "8px 12px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              fontSize: "14px",
+            }}
+          >
+            <option value="All">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Expired">Expired</option>
+          </select>
+          <span style={{ fontSize: "13px", color: "#6b7280" }}>
+            Showing {filtered.length.toLocaleString()} of{" "}
+            {plans.length.toLocaleString()} partners
+          </span>
+          <button
+            onClick={exportToExcel}
+            type="button"
+            data-ocid="plans.export.button"
+            style={{
+              marginLeft: "auto",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 18px",
+              background: "#1E40AF",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ⬇ Export Partners
+          </button>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: "12px",
+          border: "1px solid #e5e7eb",
+          overflow: "auto",
+        }}
+      >
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "14px",
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                background: "#f8fafc",
+                borderBottom: "1px solid #e5e7eb",
+              }}
+            >
+              {[
+                "Partner Name",
+                "Company",
+                "City",
+                "Plan",
+                "Price",
+                "Start Date",
+                "Expiry Date",
+                "Payment",
+                "Status",
+                "Action",
+              ].map((h) => (
+                <th
+                  key={h}
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "left",
+                    fontWeight: 600,
+                    color: "#374151",
+                    fontSize: "12px",
+                    textTransform: "uppercase",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {paginated.length === 0 && (
+              <tr>
+                <td
+                  colSpan={10}
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "#9ca3af",
+                  }}
+                  data-ocid="plans.empty_state"
+                >
+                  No plans found.
+                </td>
+              </tr>
+            )}
+            {paginated.map((plan, idx) => {
+              const pc = planTypeColors[plan.planType];
+              return (
+                <tr
+                  key={plan.id}
+                  data-ocid={`plans.row.${idx + 1}`}
+                  style={{ borderBottom: "1px solid #f3f4f6" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#f9fafb";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                  }}
+                >
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      fontWeight: 600,
+                      color: "#111827",
+                    }}
+                  >
+                    {plan.partnerName}
+                  </td>
+                  <td style={{ padding: "12px 16px", color: "#374151" }}>
+                    {plan.company}
+                  </td>
+                  <td style={{ padding: "12px 16px", color: "#374151" }}>
+                    {plan.city || "—"}
+                  </td>
+                  <td style={{ padding: "12px 16px" }}>
+                    <span
+                      style={{
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        color: pc.color,
+                        background: pc.bg,
+                        padding: "3px 10px",
+                        borderRadius: "20px",
+                        border: `1px solid ${pc.border}`,
+                      }}
+                    >
+                      {plan.planType}
+                    </span>
+                  </td>
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      fontWeight: 600,
+                      color: "#111827",
+                    }}
+                  >
+                    {plan.price}
+                  </td>
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      color: "#374151",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {plan.startDate}
+                  </td>
+                  <td
+                    style={{
+                      padding: "12px 16px",
+                      color: plan.status === "Expired" ? "#dc2626" : "#374151",
+                      fontWeight: plan.status === "Expired" ? 600 : 400,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {plan.expiryDate}
+                  </td>
+                  <td style={{ padding: "12px 16px" }}>
+                    <StatusBadge
+                      status={plan.paymentStatus}
+                      colors={
+                        plan.paymentStatus === "Paid"
+                          ? { bg: "#dcfce7", color: "#166534" }
+                          : plan.paymentStatus === "Pending"
+                            ? { bg: "#fef9c3", color: "#854d0e" }
+                            : { bg: "#fee2e2", color: "#991b1b" }
+                      }
+                    />
+                  </td>
+                  <td style={{ padding: "12px 16px" }}>
+                    <StatusBadge
+                      status={plan.status}
+                      colors={planStatusColors[plan.status]}
+                    />
+                  </td>
+                  <td style={{ padding: "12px 16px" }}>
+                    {plan.status !== "Expired" && (
+                      <button
+                        type="button"
+                        data-ocid={`plans.toggle.button.${idx + 1}`}
+                        onClick={() => toggle(plan.id)}
+                        style={{
+                          background:
+                            plan.status === "Active" ? "#fee2e2" : "#dcfce7",
+                          color:
+                            plan.status === "Active" ? "#991b1b" : "#166534",
+                          border: "none",
+                          borderRadius: "6px",
+                          padding: "5px 12px",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {plan.status === "Active" ? "Deactivate" : "Activate"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: "16px",
+          flexWrap: "wrap",
+          gap: "8px",
+        }}
+      >
+        <span style={{ fontSize: "13px", color: "#6b7280" }}>
+          Page {safePage} of {totalPages} &nbsp;·&nbsp;{" "}
+          {filtered.length.toLocaleString()} records
+        </span>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            type="button"
+            data-ocid="plans.pagination_prev"
+            disabled={safePage === 1}
+            onClick={() => setPage(safePage - 1)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "6px",
+              border: "1px solid #e5e7eb",
+              background: safePage === 1 ? "#f9fafb" : "#fff",
+              color: safePage === 1 ? "#9ca3af" : "#374151",
+              cursor: safePage === 1 ? "default" : "pointer",
+              fontSize: "13px",
+            }}
+          >
+            ← Prev
+          </button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let p: number;
+            if (totalPages <= 5) p = i + 1;
+            else if (safePage <= 3) p = i + 1;
+            else if (safePage >= totalPages - 2) p = totalPages - 4 + i;
+            else p = safePage - 2 + i;
+            return (
+              <button
+                key={p}
+                type="button"
+                data-ocid={`plans.page.${p}.button`}
+                onClick={() => setPage(p)}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  border: `1px solid ${p === safePage ? "#1e40af" : "#e5e7eb"}`,
+                  background: p === safePage ? "#1e40af" : "#fff",
+                  color: p === safePage ? "#fff" : "#374151",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  fontWeight: p === safePage ? 700 : 400,
+                }}
+              >
+                {p}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            data-ocid="plans.pagination_next"
+            disabled={safePage === totalPages}
+            onClick={() => setPage(safePage + 1)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "6px",
+              border: "1px solid #e5e7eb",
+              background: safePage === totalPages ? "#f9fafb" : "#fff",
+              color: safePage === totalPages ? "#9ca3af" : "#374151",
+              cursor: safePage === totalPages ? "default" : "pointer",
+              fontSize: "13px",
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Bookings Tab ─────────────────────────────────────────────────────────────
+
+const SAMPLE_BOOKINGS: Booking[] = [
+  {
+    id: 1,
+    customer: "Rohit Agarwal",
+    destination: "Dubai",
+    partner: "Horizon Travels",
+    value: "₹1,30,000",
+    date: "2026-03-10",
+    status: "Confirmed",
+  },
+  {
+    id: 2,
+    customer: "Priya Singh",
+    destination: "Goa",
+    partner: "SkyWing Tours",
+    value: "₹80,000",
+    date: "2026-03-07",
+    status: "Confirmed",
+  },
+  {
+    id: 3,
+    customer: "Suresh Nair",
+    destination: "Thailand",
+    partner: "BlueSky Holidays",
+    value: "₹90,000",
+    date: "2026-03-05",
+    status: "Pending",
+  },
+  {
+    id: 4,
+    customer: "Meena Kapoor",
+    destination: "Manali",
+    partner: "TravelEase India",
+    value: "₹55,000",
+    date: "2026-03-03",
+    status: "Confirmed",
+  },
+  {
+    id: 5,
+    customer: "Vivek Rao",
+    destination: "Singapore",
+    partner: "Wanderlust Pvt Ltd",
+    value: "₹1,50,000",
+    date: "2026-02-28",
+    status: "Cancelled",
+  },
+];
+
+const bookingStatusColors: Record<string, { bg: string; color: string }> = {
+  Confirmed: { bg: "#dcfce7", color: "#166534" },
+  Pending: { bg: "#fef9c3", color: "#854d0e" },
+  Cancelled: { bg: "#fee2e2", color: "#991b1b" },
+};
+
+function BookingsTab() {
+  const [bookings, setBookings] = useState<Booking[]>(SAMPLE_BOOKINGS);
+
+  const cycleStatus = (id: number) => {
+    const order: Booking["status"][] = ["Pending", "Confirmed", "Cancelled"];
+    setBookings(
+      bookings.map((b) =>
+        b.id === id
+          ? { ...b, status: order[(order.indexOf(b.status) + 1) % 3] }
+          : b,
+      ),
+    );
+  };
+
+  return (
+    <div data-ocid="admin.bookings.section">
+      <h2
+        style={{
+          fontFamily: "Poppins, sans-serif",
+          fontWeight: 700,
+          fontSize: "22px",
+          color: "#111827",
+          marginBottom: "20px",
+        }}
+      >
+        Bookings
+      </h2>
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: "12px",
+          border: "1px solid #e5e7eb",
+          overflow: "auto",
+        }}
+      >
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: "14px",
           }}
         >
           <thead>
@@ -1782,17 +2725,17 @@ function BookingsTab() {
                 "Booking Value",
                 "Booking Date",
                 "Status",
+                "Action",
               ].map((h) => (
                 <th
                   key={h}
                   style={{
                     padding: "12px 16px",
                     textAlign: "left",
-                    fontSize: "12px",
                     fontWeight: 600,
-                    color: "#6B7280",
+                    color: "#374151",
+                    fontSize: "12px",
                     textTransform: "uppercase",
-                    letterSpacing: "0.04em",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -1802,13 +2745,13 @@ function BookingsTab() {
             </tr>
           </thead>
           <tbody>
-            {BOOKINGS.map((b, i) => (
+            {bookings.map((b, idx) => (
               <tr
                 key={b.id}
-                data-ocid={`admin.bookings.row.${i + 1}`}
-                style={{ borderBottom: "1px solid #f1f5f9" }}
+                data-ocid={`bookings.row.${idx + 1}`}
+                style={{ borderBottom: "1px solid #f3f4f6" }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#f8fafc";
+                  e.currentTarget.style.background = "#f9fafb";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "transparent";
@@ -1816,61 +2759,61 @@ function BookingsTab() {
               >
                 <td
                   style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
+                    padding: "12px 16px",
+                    fontWeight: 600,
                     color: "#111827",
-                    fontWeight: 500,
-                    whiteSpace: "nowrap",
                   }}
                 >
                   {b.customer}
                 </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
                   {b.destination}
                 </td>
-                <td
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#374151",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <td style={{ padding: "12px 16px", color: "#374151" }}>
                   {b.partner}
                 </td>
                 <td
                   style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
-                    color: "#111827",
+                    padding: "12px 16px",
                     fontWeight: 600,
-                    whiteSpace: "nowrap",
+                    color: "#111827",
                   }}
                 >
                   {b.value}
                 </td>
                 <td
                   style={{
-                    padding: "14px 16px",
-                    fontSize: "13px",
+                    padding: "12px 16px",
                     color: "#374151",
                     whiteSpace: "nowrap",
                   }}
                 >
                   {b.date}
                 </td>
-                <td style={{ padding: "14px 16px" }}>
+                <td style={{ padding: "12px 16px" }}>
                   <StatusBadge
                     status={b.status}
                     colors={bookingStatusColors[b.status]}
                   />
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  <button
+                    type="button"
+                    data-ocid={`bookings.status.button.${idx + 1}`}
+                    onClick={() => cycleStatus(b.id)}
+                    style={{
+                      background: "#f3f4f6",
+                      color: "#374151",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "5px 10px",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Change Status
+                  </button>
                 </td>
               </tr>
             ))}
@@ -1881,378 +2824,229 @@ function BookingsTab() {
   );
 }
 
-// ─── Directory ────────────────────────────────────────────────────────────────
+// ─── Main Dashboard ───────────────────────────────────────────────────────────
 
-function DirectoryTab({
-  directory,
-  onRemove,
-  onAdd,
-  editingPartner,
-  setEditingPartner,
-  onSaveEdit,
-}: {
-  directory: DirectoryPartner[];
-  onRemove: (id: number) => void;
-  onAdd: () => void;
-  editingPartner: DirectoryPartner | null;
-  setEditingPartner: (p: DirectoryPartner | null) => void;
-  onSaveEdit: (p: DirectoryPartner) => void;
-}) {
+export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [registrations, setRegistrations] = useState<PartnerReg[]>(() => {
+    const realSubmissions = getPartnerRegistrations().map(
+      (r: StoredPartnerReg, idx: number): PartnerReg => ({
+        id: idx + 1000,
+        name: r.name,
+        company: r.company,
+        phone: r.phone,
+        email: r.email,
+        city: r.city,
+        experience: r.experience,
+        date: r.date,
+        status: (r.status as PartnerStatus) || "Pending",
+        planStatus: "None",
+        isNew: r.isReal,
+      }),
+    );
+    const realIds = new Set(realSubmissions.map((r) => r.id));
+    const sampleData = INITIAL_REGISTRATIONS.filter((r) => !realIds.has(r.id));
+    return [...realSubmissions, ...sampleData];
+  });
+
+  const [leads, setLeads] = useState<Lead[]>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("travel_leads") || "[]");
+      const storedLeads = stored.map((l: Lead, idx: number) => ({
+        ...l,
+        id: idx + 2000,
+        leadSource: (l.leadSource as Lead["leadSource"]) || "Form",
+        status: (l.status as LeadStatus) || "Active",
+        isNew: true,
+      }));
+      return storedLeads.length > 0
+        ? [...storedLeads, ...INITIAL_LEADS]
+        : INITIAL_LEADS;
+    } catch {
+      return INITIAL_LEADS;
+    }
+  });
+
+  const [inquiries, setInquiries] =
+    useState<BookingInquiry[]>(INITIAL_INQUIRIES);
+  const [plans, setPlans] = useState<PartnerPlan[]>(INITIAL_PLANS);
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("tnw_admin_auth");
+    if (!isLoggedIn) navigate({ to: "/admin-login" });
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("tnw_admin_auth");
+    navigate({ to: "/admin-login" });
+  };
+
   return (
-    <div>
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        fontFamily: "Inter, sans-serif",
+        background: "#f8fafc",
+      }}
+      data-ocid="admin.dashboard.section"
+    >
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 40,
+          }}
+          onClick={() => setSidebarOpen(false)}
+          onKeyDown={() => setSidebarOpen(false)}
+          role="button"
+          tabIndex={0}
+        />
+      )}
+
+      {/* Desktop sidebar */}
+      <div style={{ display: "none" }} className="desktop-sidebar">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
+
+      {/* Mobile sidebar */}
+      {sidebarOpen && (
+        <div
+          style={{
+            position: "fixed",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: "260px",
+            zIndex: 50,
+          }}
+        >
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={(t) => {
+              setActiveTab(t);
+              setSidebarOpen(false);
+            }}
+            onClose={() => setSidebarOpen(false)}
+            isMobile
+          />
+        </div>
+      )}
+
+      {/* Sidebar (always visible on md+) */}
+      <div
+        style={{ width: "240px", flexShrink: 0, display: "flex" }}
+        className="sidebar-wrapper"
+      >
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
+
+      {/* Main content */}
       <div
         style={{
+          flex: 1,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "24px",
-          flexWrap: "wrap",
-          gap: "12px",
+          flexDirection: "column",
+          minWidth: 0,
         }}
       >
-        <div>
-          <h3
-            style={{
-              fontSize: "20px",
-              fontWeight: 700,
-              color: "#111827",
-              margin: "0 0 4px",
-              fontFamily: "'Poppins', sans-serif",
-            }}
-          >
-            Partner Directory
-          </h3>
-          <p style={{ fontSize: "13px", color: "#6B7280", margin: 0 }}>
-            {directory.length} partners listed
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onAdd}
-          data-ocid="admin.directory.primary_button"
+        {/* Top bar */}
+        <header
           style={{
+            background: "#fff",
+            borderBottom: "1px solid #e5e7eb",
+            padding: "14px 24px",
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            padding: "10px 18px",
-            background: "#1E40AF",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
+            justifyContent: "space-between",
+            position: "sticky",
+            top: 0,
+            zIndex: 30,
           }}
         >
-          <Plus size={15} /> Add New Partner
-        </button>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: "16px",
-        }}
-      >
-        {directory.map((p, i) => (
-          <div
-            key={p.id}
-            data-ocid={`admin.directory.card.${i + 1}`}
-            style={{
-              background: "#ffffff",
-              borderRadius: "12px",
-              padding: "20px",
-              boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
-              border: "1px solid #f1f5f9",
-            }}
-          >
-            {editingPartner?.id === p.id ? (
-              <EditPartnerInline
-                partner={editingPartner}
-                onChange={setEditingPartner}
-                onSave={() => onSaveEdit(editingPartner)}
-                onCancel={() => setEditingPartner(null)}
-              />
-            ) : (
-              <>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    marginBottom: "12px",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "44px",
-                      height: "44px",
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #1E40AF, #3B82F6)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#fff",
-                      fontWeight: 700,
-                      fontSize: "14px",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {p.company.substring(0, 2).toUpperCase()}
-                  </div>
-                  {p.verified && (
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        background: "#dbeafe",
-                        color: "#1e3a8a",
-                        padding: "3px 8px",
-                        borderRadius: "20px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      ✓ Verified
-                    </span>
-                  )}
-                </div>
-                <h4
-                  style={{
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    color: "#111827",
-                    margin: "0 0 4px",
-                    fontFamily: "'Poppins', sans-serif",
-                  }}
-                >
-                  {p.company}
-                </h4>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "#6B7280",
-                    margin: "0 0 4px",
-                  }}
-                >
-                  📍 {p.city}
-                </p>
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "#374151",
-                    margin: "0 0 16px",
-                  }}
-                >
-                  <span
-                    style={{
-                      background:
-                        p.specialization === "International"
-                          ? "#fee2e2"
-                          : p.specialization === "Luxury"
-                            ? "#fef9c3"
-                            : p.specialization === "Adventure"
-                              ? "#dcfce7"
-                              : "#dbeafe",
-                      color:
-                        p.specialization === "International"
-                          ? "#991b1b"
-                          : p.specialization === "Luxury"
-                            ? "#854d0e"
-                            : p.specialization === "Adventure"
-                              ? "#166534"
-                              : "#1e3a8a",
-                      padding: "2px 8px",
-                      borderRadius: "20px",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {p.specialization}
-                  </span>
-                </p>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    type="button"
-                    onClick={() => setEditingPartner(p)}
-                    data-ocid={`admin.directory.edit_button.${i + 1}`}
-                    style={{
-                      flex: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "4px",
-                      padding: "8px",
-                      border: "1.5px solid #e5e7eb",
-                      borderRadius: "6px",
-                      background: "#fff",
-                      color: "#374151",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Edit size={13} /> Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onRemove(p.id)}
-                    data-ocid={`admin.directory.delete_button.${i + 1}`}
-                    style={{
-                      flex: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "4px",
-                      padding: "8px",
-                      border: "1.5px solid #fee2e2",
-                      borderRadius: "6px",
-                      background: "#fff5f5",
-                      color: "#dc2626",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Trash2 size={13} /> Remove
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function EditPartnerInline({
-  partner,
-  onChange,
-  onSave,
-  onCancel,
-}: {
-  partner: DirectoryPartner;
-  onChange: (p: DirectoryPartner) => void;
-  onSave: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <div>
-      {(["company", "city", "specialization", "phone", "email"] as const).map(
-        (field) => (
-          <div key={field} style={{ marginBottom: "10px" }}>
-            <div
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              type="button"
+              data-ocid="admin.menu.button"
+              onClick={() => setSidebarOpen(true)}
               style={{
-                display: "block",
-                fontSize: "11px",
-                fontWeight: 600,
-                color: "#6B7280",
-                textTransform: "uppercase",
-                marginBottom: "4px",
-              }}
-            >
-              {field}
-            </div>
-            <input
-              value={partner[field]}
-              onChange={(e) =>
-                onChange({ ...partner, [field]: e.target.value })
-              }
-              style={{
-                width: "100%",
-                padding: "8px 10px",
-                border: "1.5px solid #E5E7EB",
-                borderRadius: "6px",
-                fontSize: "12px",
-                outline: "none",
-                boxSizing: "border-box",
+                display: "none",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
                 color: "#374151",
               }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#1E40AF";
+            >
+              <Menu size={22} />
+            </button>
+            <span
+              style={{
+                fontFamily: "Poppins, sans-serif",
+                fontWeight: 700,
+                fontSize: "18px",
+                color: "#111827",
               }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#E5E7EB";
-              }}
-            />
+            >
+              {NAV_ITEMS.find((n) => n.id === activeTab)?.label || "Dashboard"}
+            </span>
           </div>
-        ),
-      )}
-      <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-        <button
-          type="button"
-          onClick={onSave}
-          data-ocid="admin.directory.save_button"
-          style={{
-            flex: 1,
-            padding: "8px",
-            background: "#1E40AF",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            fontSize: "12px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          data-ocid="admin.directory.cancel_button"
-          style={{
-            flex: 1,
-            padding: "8px",
-            background: "#f1f5f9",
-            color: "#374151",
-            border: "none",
-            borderRadius: "6px",
-            fontSize: "12px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Cancel
-        </button>
+          <button
+            type="button"
+            data-ocid="admin.logout.button"
+            onClick={handleLogout}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#fee2e2",
+              color: "#991b1b",
+              border: "none",
+              borderRadius: "8px",
+              padding: "8px 16px",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            <LogOut size={15} />
+            Logout
+          </button>
+        </header>
+
+        {/* Tab content */}
+        <main style={{ flex: 1, padding: "28px 28px", overflowY: "auto" }}>
+          {activeTab === "overview" && (
+            <OverviewTab
+              partners={registrations}
+              leads={leads}
+              inquiries={inquiries}
+              plans={plans}
+            />
+          )}
+          {activeTab === "inquiries" && (
+            <InquiriesTab inquiries={inquiries} setInquiries={setInquiries} />
+          )}
+          {activeTab === "leads" && (
+            <LeadsTab leads={leads} setLeads={setLeads} />
+          )}
+          {activeTab === "partners" && (
+            <PartnersTab
+              partners={registrations}
+              setPartners={setRegistrations}
+            />
+          )}
+          {activeTab === "plans" && (
+            <PlansTab plans={plans} setPlans={setPlans} />
+          )}
+          {activeTab === "bookings" && <BookingsTab />}
+        </main>
       </div>
     </div>
-  );
-}
-
-// ─── Tiny action button helper ─────────────────────────────────────────────────
-
-function ActionBtn({
-  color,
-  bg,
-  onClick,
-  children,
-  ocid,
-}: {
-  color: string;
-  bg: string;
-  onClick: () => void;
-  children: React.ReactNode;
-  ocid: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      data-ocid={ocid}
-      style={{
-        padding: "5px 10px",
-        background: bg,
-        color,
-        border: "none",
-        borderRadius: "6px",
-        fontSize: "11px",
-        fontWeight: 600,
-        cursor: "pointer",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {children}
-    </button>
   );
 }
