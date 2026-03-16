@@ -9,8 +9,9 @@ const navLinks = [
   { label: "Services", to: "/services" },
   { label: "Destinations", to: "/destinations" },
   { label: "Partners", to: "/partners" },
+  { label: "Travel Leads", to: "/latest-leads" },
   { label: "Pricing", to: "/pricing" },
-  { label: "Partner Registration", to: "/partner" },
+  { label: "Partner Reg.", to: "/partner" },
   { label: "Contact", to: "/contact" },
 ];
 
@@ -41,7 +42,7 @@ export default function Navbar() {
       }`}
     >
       <div className="container-custom">
-        <div className="flex items-center justify-between h-16 md:h-[72px]">
+        <div className="flex items-center justify-between h-14 sm:h-16 md:h-[72px]">
           {/* ── Logo ── */}
           <Link
             to="/"
@@ -49,14 +50,14 @@ export default function Navbar() {
             data-ocid="nav.link.1"
           >
             {logoError ? (
-              <span className="font-bold text-xl text-primary font-display">
+              <span className="font-bold text-base sm:text-xl text-primary font-display">
                 Travel N World
               </span>
             ) : (
               <img
                 src="/assets/uploads/logo-1.png"
                 alt="Travel N World"
-                className="h-10 w-auto object-contain"
+                className="h-8 w-auto sm:h-10 object-contain"
                 onError={() => setLogoError(true)}
               />
             )}
@@ -98,6 +99,7 @@ export default function Navbar() {
             type="button"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
+            data-ocid="nav.mobile_menu_button"
             className="lg:hidden p-2.5 rounded-xl transition-colors text-primary hover:bg-royal-50"
           >
             {mobileOpen ? (
@@ -131,7 +133,7 @@ export default function Navbar() {
               <Button
                 asChild
                 data-ocid="nav.join_button"
-                className="w-full red-gradient hover:opacity-90 text-white font-semibold border-0 rounded-xl transition-opacity"
+                className="w-full red-gradient hover:opacity-90 text-white font-semibold border-0 rounded-xl transition-opacity h-11"
               >
                 <Link to="/partner">Join Now — It's Free</Link>
               </Button>

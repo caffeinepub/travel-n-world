@@ -15,10 +15,12 @@ import FlightBooking from "./pages/FlightBooking";
 import Home from "./pages/Home";
 import HotelBooking from "./pages/HotelBooking";
 import InternationalPackages from "./pages/InternationalPackages";
+import LatestTravelLeads from "./pages/LatestTravelLeads";
 import Partner from "./pages/Partner";
 import PartnerDashboard from "./pages/PartnerDashboard";
 import PartnerLogin from "./pages/PartnerLogin";
 import Partners from "./pages/Partners";
+import PaymentPage from "./pages/PaymentPage";
 import Pricing from "./pages/Pricing";
 import Services from "./pages/Services";
 import TransportServices from "./pages/TransportServices";
@@ -100,6 +102,12 @@ const partnersRoute = createRoute({
   component: Partners,
 });
 
+const latestLeadsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/latest-leads",
+  component: LatestTravelLeads,
+});
+
 const pricingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/pricing",
@@ -136,6 +144,12 @@ const partnerDashboardRoute = createRoute({
   component: PartnerDashboard,
 });
 
+const paymentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payment",
+  component: PaymentPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   aboutRoute,
@@ -149,12 +163,14 @@ const routeTree = rootRoute.addChildren([
   destinationsRoute,
   partnerRoute,
   partnersRoute,
+  latestLeadsRoute,
   pricingRoute,
   contactRoute,
   adminLoginRoute,
   adminDashboardRoute,
   partnerLoginRoute,
   partnerDashboardRoute,
+  paymentRoute,
 ]);
 
 const router = createRouter({ routeTree });

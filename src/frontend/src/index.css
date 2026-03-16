@@ -22,9 +22,6 @@
 @layer base {
   :root {
     /* ── Travel N World Premium Theme ── */
-    /* Royal Blue #1E40AF → oklch(38 0.18 264) */
-    /* Travel Red #E53935 → oklch(51 0.22 27)  */
-
     --background: 100 0 0;
     --foreground: 18 0.06 265;
 
@@ -34,22 +31,18 @@
     --popover: 100 0 0;
     --popover-foreground: 18 0.06 265;
 
-    /* Royal Blue — exact #1E40AF */
     --primary: 38 0.18 264;
     --primary-foreground: 100 0 0;
 
-    /* Light blue bg */
     --secondary: 97 0.01 240;
     --secondary-foreground: 38 0.18 264;
 
     --muted: 97 0.005 240;
     --muted-foreground: 55 0.04 265;
 
-    /* Gold accent — for luxury tags & highlights */
     --accent: 76 0.155 74;
     --accent-foreground: 20 0.05 74;
 
-    /* Travel Red — exact #E53935 */
     --red: 51 0.22 27;
 
     --destructive: 51 0.22 27;
@@ -85,12 +78,14 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 72px;
+    overflow-x: hidden;
   }
   body {
     @apply bg-background text-foreground font-sans;
     font-family: "Inter", "Outfit", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
   h1,
   h2,
@@ -113,9 +108,9 @@
     text-wrap: balance;
   }
 
-  /* ── Premium section padding ── */
+  /* ── Premium section padding — tighter on mobile ── */
   .section-padding {
-    @apply py-20 md:py-28;
+    @apply py-12 md:py-20 lg:py-28;
   }
 
   .container-custom {
@@ -206,7 +201,7 @@
     transform: translateX(-50%);
   }
 
-  /* ── Red accent line (same as gold-line but named semantically) ── */
+  /* ── Red accent line ── */
   .red-line {
     position: relative;
     padding-bottom: 18px;
@@ -245,7 +240,7 @@
       oklch(38 0.18 264 / 0.06);
   }
 
-  /* ── Partner card hover — spring lift + blue top border ── */
+  /* ── Partner card hover ── */
   .partner-card-hover {
     border-top: 3px solid transparent;
     transition: transform 0.26s cubic-bezier(0.34, 1.52, 0.64, 1), box-shadow

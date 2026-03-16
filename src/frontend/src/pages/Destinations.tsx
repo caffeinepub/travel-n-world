@@ -106,7 +106,7 @@ function DestCard({
       className="reveal bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl hover:shadow-blue-100 transition-all duration-300 hover:-translate-y-2 cursor-pointer group flex flex-col"
     >
       {/* Image */}
-      <div className="relative overflow-hidden" style={{ height: "220px" }}>
+      <div className="relative overflow-hidden h-44 sm:h-48 md:h-[220px]">
         {imgError ? (
           <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex flex-col items-center justify-center">
             <Globe className="h-10 w-10 text-blue-400 mb-2" />
@@ -210,34 +210,39 @@ export default function Destinations() {
 
       <section className="section-padding bg-gray-50">
         <div className="container-custom">
-          {/* Filter Tabs */}
-          <div className="flex justify-center mb-10 reveal">
-            <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-              <TabsList className="bg-white border border-gray-200 p-1 rounded-2xl h-auto gap-1 shadow-sm">
-                {(["all", "asia", "europe", "domestic"] as Filter[]).map(
-                  (f) => (
-                    <TabsTrigger
-                      key={f}
-                      value={f}
-                      data-ocid={`destinations.${f}.tab`}
-                      className="rounded-xl px-5 py-2.5 text-sm font-medium capitalize data-[state=active]:bg-[#1E40AF] data-[state=active]:text-white"
-                    >
-                      {f === "all"
-                        ? "All"
-                        : f === "asia"
-                          ? "Asia & Middle East"
-                          : f === "europe"
-                            ? "Europe"
-                            : "Domestic India"}
-                    </TabsTrigger>
-                  ),
-                )}
-              </TabsList>
-            </Tabs>
+          {/* Filter Tabs — horizontally scrollable on mobile */}
+          <div className="mb-8 sm:mb-10 reveal overflow-x-auto pb-2">
+            <div className="flex justify-center min-w-max mx-auto sm:min-w-0">
+              <Tabs
+                value={filter}
+                onValueChange={(v) => setFilter(v as Filter)}
+              >
+                <TabsList className="bg-white border border-gray-200 p-1 rounded-2xl h-auto gap-1 shadow-sm flex-nowrap">
+                  {(["all", "asia", "europe", "domestic"] as Filter[]).map(
+                    (f) => (
+                      <TabsTrigger
+                        key={f}
+                        value={f}
+                        data-ocid={`destinations.${f}.tab`}
+                        className="rounded-xl px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium capitalize whitespace-nowrap data-[state=active]:bg-[#1E40AF] data-[state=active]:text-white"
+                      >
+                        {f === "all"
+                          ? "All"
+                          : f === "asia"
+                            ? "Asia & Middle East"
+                            : f === "europe"
+                              ? "Europe"
+                              : "Domestic India"}
+                      </TabsTrigger>
+                    ),
+                  )}
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
 
           {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {filtered.map((dest, i) => (
               <DestCard
                 key={dest.name}

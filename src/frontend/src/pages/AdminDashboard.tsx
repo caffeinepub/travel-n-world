@@ -8,6 +8,7 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   BarChart2,
   BookOpen,
+  Briefcase,
   Building2,
   CheckCircle,
   CreditCard,
@@ -15,9 +16,11 @@ import {
   Eye,
   Globe,
   LogOut,
+  Megaphone,
   Menu,
   MessageSquare,
   Plus,
+  Receipt,
   Search,
   Shield,
   Trash2,
@@ -27,6 +30,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import CRMDashboard from "./CRMDashboard";
+import DigitalMarketing from "./DigitalMarketing";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -127,6 +132,19 @@ interface DmcBooking {
   travelDate: string;
   bookingValue: string;
   status: "Confirmed" | "Pending" | "Cancelled";
+}
+
+interface PaymentRequest {
+  id: string;
+  name: string;
+  phone: string;
+  plan: string;
+  planLabel: string;
+  amount: string;
+  transactionId: string;
+  screenshot: string;
+  submittedAt: string;
+  status: "pending" | "approved" | "rejected";
 }
 
 // ─── Sample Data ─────────────────────────────────────────────────────────────
@@ -991,6 +1009,9 @@ const NAV_ITEMS = [
   { id: "bookings", label: "Bookings", icon: BookOpen },
   { id: "hotel-bookings", label: "Hotel Bookings", icon: Building2 },
   { id: "dmc-bookings", label: "DMC Bookings", icon: Globe },
+  { id: "crm", label: "CRM & Marketing", icon: Briefcase },
+  { id: "digital-marketing", label: "Digital Marketing", icon: Megaphone },
+  { id: "payment-requests", label: "Payment Requests", icon: Receipt },
 ];
 
 function Sidebar({
@@ -1898,6 +1919,7 @@ function LeadsTab({
             >
               {[
                 "Customer",
+                "Phone",
                 "Destination",
                 "Budget",
                 "Travel Date",
@@ -1927,7 +1949,7 @@ function LeadsTab({
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={9}
                   style={{
                     textAlign: "center",
                     padding: "40px",
@@ -1973,6 +1995,22 @@ function LeadsTab({
                     >
                       NEW
                     </span>
+                  )}
+                </td>
+                <td style={{ padding: "12px 16px" }}>
+                  {lead.phone ? (
+                    <a
+                      href={`tel:${lead.phone}`}
+                      style={{
+                        color: "#1e40af",
+                        textDecoration: "none",
+                        fontSize: "13px",
+                      }}
+                    >
+                      {lead.phone}
+                    </a>
+                  ) : (
+                    <span style={{ color: "#d1d5db" }}>—</span>
                   )}
                 </td>
                 <td style={{ padding: "12px 16px", color: "#374151" }}>
@@ -2078,6 +2116,56 @@ function LeadsTab({
                     <div
                       style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}
                     >
+                      <a
+                        href={`tel:${lead.phone?.replace(/[^0-9+]/g, "") || ""}`}
+                        data-ocid={`leads.call_button.${idx + 1}`}
+                        style={{
+                          padding: "4px 10px",
+                          background: "#fef3c7",
+                          color: "#92400e",
+                          border: "1px solid #fcd34d",
+                          borderRadius: 6,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          textDecoration: "none",
+                          fontSize: 12,
+                          fontWeight: 500,
+                        }}
+                        title={`Call ${lead.phone}`}
+                      >
+                        📞 Call
+                      </a>
+                      <button
+                        type="button"
+                        data-ocid={`leads.whatsapp_button.${idx + 1}`}
+                        onClick={() => {
+                          const msg = encodeURIComponent(
+                            `Hi ${lead.customer}, this is Travel N World. We received your travel inquiry for ${lead.destination}. Our expert will contact you shortly.`,
+                          );
+                          window.open(
+                            `https://wa.me/${lead.phone?.replace(/[^0-9]/g, "")}?text=${msg}`,
+                            "_blank",
+                          );
+                        }}
+                        style={{
+                          padding: "4px 10px",
+                          background: "#d1fae5",
+                          color: "#065f46",
+                          border: "1px solid #6ee7b7",
+                          borderRadius: 6,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          fontSize: 12,
+                          fontWeight: 500,
+                        }}
+                        title={`WhatsApp ${lead.customer}`}
+                      >
+                        💬 WhatsApp
+                      </button>
                       <button
                         type="button"
                         data-ocid={`leads.assign.button.${idx + 1}`}
@@ -3847,6 +3935,205 @@ function BookingsTab() {
   );
 }
 
+// ─── Payment Requests Tab ─────────────────────────────────────────────────────
+
+function PaymentRequestsTab({
+  requests,
+  setRequests,
+}: {
+  requests: PaymentRequest[];
+  setRequests: React.Dispatch<React.SetStateAction<PaymentRequest[]>>;
+}) {
+  const handleApprove = (req: PaymentRequest) => {
+    const now = new Date();
+    const expiry = new Date(now);
+    if (req.plan === "starter") expiry.setMonth(expiry.getMonth() + 3);
+    else if (req.plan === "professional")
+      expiry.setMonth(expiry.getMonth() + 6);
+    else expiry.setFullYear(expiry.getFullYear() + 1);
+
+    localStorage.setItem(
+      "tnw_partner_plan",
+      JSON.stringify({
+        plan: req.plan,
+        planLabel: req.planLabel,
+        expiry: expiry.toISOString(),
+        phone: req.phone,
+      }),
+    );
+    localStorage.setItem("tnw_partner_auth", req.phone);
+    localStorage.setItem("partner_logged_in", "true");
+
+    const updated = requests.map((r) =>
+      r.id === req.id ? { ...r, status: "approved" as const } : r,
+    );
+    setRequests(updated);
+    localStorage.setItem("tnw_payment_requests", JSON.stringify(updated));
+  };
+
+  const handleReject = (id: string) => {
+    const updated = requests.map((r) =>
+      r.id === id ? { ...r, status: "rejected" as const } : r,
+    );
+    setRequests(updated);
+    localStorage.setItem("tnw_payment_requests", JSON.stringify(updated));
+  };
+
+  const pending = requests.filter((r) => r.status === "pending");
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Payment Requests</h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Review and approve UPI payment submissions for B2B membership plans
+          </p>
+        </div>
+        {pending.length > 0 && (
+          <span className="bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full">
+            {pending.length} Pending
+          </span>
+        )}
+      </div>
+
+      {requests.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
+          <Receipt className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">No payment requests yet</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Requests will appear here when members submit payment confirmations
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Name
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Phone
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Plan
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Amount
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Transaction ID
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Screenshot
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Date
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Status
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((req, idx) => (
+                  <tr
+                    key={req.id}
+                    className="border-b border-gray-100 hover:bg-gray-50"
+                    data-ocid={`payment.requests.row.${idx + 1}`}
+                  >
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      {req.name}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700">{req.phone}</td>
+                    <td className="px-4 py-3">
+                      <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
+                        {req.planLabel}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-gray-900">
+                      {req.amount}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">
+                      {req.transactionId}
+                    </td>
+                    <td className="px-4 py-3">
+                      {req.screenshot ? (
+                        <a
+                          href={req.screenshot}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <img
+                            src={req.screenshot}
+                            alt="Payment screenshot"
+                            className="w-12 h-12 object-cover rounded-lg border border-gray-200 hover:opacity-80 cursor-pointer"
+                          />
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-xs">
+                          No screenshot
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">
+                      {new Date(req.submittedAt).toLocaleDateString("en-IN")}
+                    </td>
+                    <td className="px-4 py-3">
+                      {req.status === "pending" && (
+                        <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded-full">
+                          Pending
+                        </span>
+                      )}
+                      {req.status === "approved" && (
+                        <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">
+                          Approved
+                        </span>
+                      )}
+                      {req.status === "rejected" && (
+                        <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">
+                          Rejected
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {req.status === "pending" && (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(req)}
+                            className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                            data-ocid={`payment.approve.button.${idx + 1}`}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleReject(req.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                            data-ocid={`payment.reject.button.${idx + 1}`}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
@@ -3899,6 +4186,15 @@ export default function AdminDashboard() {
   const [hotelBookings, setHotelBookings] =
     useState<HotelBooking[]>(HOTEL_BOOKINGS);
   const [dmcBookings, setDmcBookings] = useState<DmcBooking[]>(DMC_BOOKINGS);
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>(
+    () => {
+      try {
+        return JSON.parse(localStorage.getItem("tnw_payment_requests") || "[]");
+      } catch {
+        return [];
+      }
+    },
+  );
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("tnw_admin_auth");
@@ -4081,6 +4377,14 @@ export default function AdminDashboard() {
             <DmcBookingsTab
               bookings={dmcBookings}
               setBookings={setDmcBookings}
+            />
+          )}
+          {activeTab === "crm" && <CRMDashboard />}
+          {activeTab === "digital-marketing" && <DigitalMarketing />}
+          {activeTab === "payment-requests" && (
+            <PaymentRequestsTab
+              requests={paymentRequests}
+              setRequests={setPaymentRequests}
             />
           )}
         </main>

@@ -1,39 +1,34 @@
 # Travel N World
 
 ## Current State
-The admin dashboard has 6 tabs: Overview, Booking Inquiries, Travel Leads, Partners, B2B Plans, Bookings. Partners only have one implicit type (travel agents). The Overview has 6 stat cards (500k+ partners, 100k+ leads, 100k+ inquiries, 25k+ bookings, 50k+ members, 150k+ daily reach). There is a BookingsTab with travel package bookings only.
+The Pricing page has three B2B membership plans (Starter ₹3000, Professional ₹6000, Premium ₹12000). Clicking "Get Started", "Choose Professional", or "Go Premium" opens an in-page `PurchasePlanModal` that collects agent info and immediately saves the plan to localStorage without any real payment verification. The Admin Dashboard has no Payment Requests section.
 
 ## Requested Changes (Diff)
 
 ### Add
-- `PartnerType` type: `'Travel Agent' | 'Hotel Partner' | 'DMC Partner'`
-- `partnerType` field on `PartnerReg` interface (and INITIAL_REGISTRATIONS sample data)
-- `HotelBooking` interface: id, customerName, hotelName, city, roomType, checkIn, checkOut, bookingValue, status
-- `DmcBooking` interface: id, customerName, destination, dmcPartner, serviceType, travelDate, bookingValue, status
-- `HOTEL_BOOKINGS` sample data (20 records) featuring Taj Palace-Delhi, Leela Palace-Jaipur, Taj Lake Palace-Udaipur, The Oberoi-Mumbai, Radisson Blu-Goa etc.
-- `DMC_BOOKINGS` sample data (20 records) covering Airport Transfers, Local Sightseeing, Adventure Tours, Pilgrimage Tours across Uttarakhand (Char Dham, Kedarnath, Badrinath), Kashmir, Goa, Kerala, Himachal etc.
-- Two new NAV_ITEMS: `{ id: 'hotel-bookings', label: 'Hotel Bookings', icon: Building2 }` and `{ id: 'dmc-bookings', label: 'DMC Bookings', icon: Globe }`
-- `HotelBookingsTab` component: table with Customer Name, Hotel Name, City, Room Type, Check-in, Check-out, Booking Value, Status; with search filter
-- `DmcBookingsTab` component: table with Customer Name, Destination, DMC Partner, Service Type, Travel Date, Booking Value, Status; with search filter
-- 3 new stat cards in OverviewTab: Total Hotel Bookings (40,000+), Total Travel Package Bookings (35,000+), Total DMC Service Bookings (25,000+)
+- New `/payment` route and `PaymentPage.tsx` component
+  - Shows selected plan name and amount
+  - Displays UPI ID `travelnworld@upi` with copy button and step-by-step instructions
+  - Step 1: UPI instructions
+  - Step 2: Screenshot upload
+  - Step 3: Name, Phone, Transaction ID form fields
+  - Step 4: Submit button that saves payment request to localStorage key `tnw_payment_requests`
+  - Shows success confirmation after submission
+- New "Payment Requests" tab in AdminDashboard sidebar
+  - Lists all payment requests (Name, Phone, Plan, Amount, Transaction ID, Screenshot preview)
+  - Approve button: activates plan in localStorage, marks request approved
+  - Reject button: marks request rejected
 
 ### Modify
-- `PartnerReg` interface: add `partnerType?: PartnerType`
-- `INITIAL_REGISTRATIONS`: add `partnerType` to each record (Rajesh=Travel Agent, Priya=Hotel Partner, Aman=DMC Partner, Sunita=Travel Agent, Vikram=Hotel Partner)
-- `PartnersTab`: add Partner Type column to the table; add a type filter dropdown (All / Travel Agent / Hotel Partner / DMC Partner); update search to also filter by partnerType
-- `OverviewTab`: append 3 new booking category stat cards after the existing 6 cards
-- Main `AdminDashboard`: add state for `hotelBookings` and `dmcBookings`; render `HotelBookingsTab` and `DmcBookingsTab` when activeTab is `'hotel-bookings'` or `'dmc-bookings'`
+- `Pricing.tsx`: Change plan CTA buttons to navigate to `/payment?plan=<planId>` instead of opening the modal
+- `App.tsx`: Add `/payment` route
+- `AdminDashboard.tsx`: Add `payment-requests` to NAV_ITEMS and render the new tab
 
 ### Remove
-- Nothing removed
+- Nothing removed; existing modal can remain as fallback
 
 ## Implementation Plan
-1. Add types and interfaces at top of AdminDashboard.tsx
-2. Add HOTEL_BOOKINGS and DMC_BOOKINGS sample data arrays
-3. Update INITIAL_REGISTRATIONS to include partnerType
-4. Update OverviewTab to include 3 new booking stat cards
-5. Update PartnersTab to add Partner Type column and filter
-6. Add HotelBookingsTab component
-7. Add DmcBookingsTab component
-8. Update NAV_ITEMS to include the 2 new tabs
-9. Update main AdminDashboard component state and rendering
+1. Create `PaymentPage.tsx` with UPI instructions, screenshot upload, form, and localStorage submit
+2. Update `Pricing.tsx` plan buttons to use `useNavigate` to `/payment?plan=<id>`
+3. Register `/payment` route in `App.tsx`
+4. Add Payment Requests tab to `AdminDashboard.tsx` with approve/reject actions

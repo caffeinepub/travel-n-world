@@ -8,7 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, Loader2, MessageCircle, X } from "lucide-react";
+import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
 interface BookingModalProps {
@@ -35,7 +35,6 @@ export default function BookingModal({
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // Sync destination when modal opens with new destination
   const handleOpen = (isOpen: boolean) => {
     if (isOpen) {
       setForm((prev) => ({ ...prev, destination: destinationName }));
@@ -71,12 +70,42 @@ export default function BookingModal({
     try {
       const existing = JSON.parse(localStorage.getItem("travel_leads") || "[]");
       localStorage.setItem("travel_leads", JSON.stringify([lead, ...existing]));
+      // Also save to Digital Marketing leads
+      const dmLead = {
+        id: lead.id,
+        name: form.fullName,
+        phone: form.phone,
+        email: form.email,
+        destination: form.destination,
+        budget: form.budget || "Not specified",
+        travelDate: form.travelDate,
+        travelers: Number.parseInt(form.travelers) || 1,
+        message: form.message,
+        source: "Book Now Form",
+        status: "New Lead",
+        createdAt: new Date().toISOString().split("T")[0],
+      };
+      const dmExisting = JSON.parse(
+        localStorage.getItem("tnw_dm_leads") || "[]",
+      );
+      localStorage.setItem(
+        "tnw_dm_leads",
+        JSON.stringify([dmLead, ...dmExisting]),
+      );
     } catch {
       // ignore storage errors
     }
 
     setLoading(false);
     setSubmitted(true);
+
+    // Auto WhatsApp notification to admin
+    const adminMsg = encodeURIComponent(
+      `New travel inquiry received.\n\nCustomer: ${form.fullName}\nDestination: ${form.destination}\nPhone: ${form.phone}\nEmail: ${form.email}\nTravel Date: ${form.travelDate}\nTravelers: ${form.travelers}\nBudget: ${form.budget || "Not specified"}`,
+    );
+    setTimeout(() => {
+      window.open(`https://wa.me/917290087054?text=${adminMsg}`, "_blank");
+    }, 800);
   };
 
   const handleClose = () => {
@@ -108,15 +137,14 @@ export default function BookingModal({
     >
       <DialogContent
         data-ocid="booking.modal"
-        className="max-w-[500px] w-full p-0 overflow-hidden rounded-2xl"
-        style={{ maxHeight: "90vh", overflowY: "auto" }}
+        className="max-w-[500px] w-[calc(100vw-2rem)] sm:w-full p-0 overflow-hidden rounded-2xl max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-100">
+        <DialogHeader className="px-4 sm:px-6 pt-5 pb-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle
-                className="text-xl font-bold text-gray-900"
+                className="text-lg sm:text-xl font-bold text-gray-900"
                 style={{ fontFamily: "Poppins, sans-serif" }}
               >
                 Book Your Trip
@@ -130,7 +158,7 @@ export default function BookingModal({
           </div>
         </DialogHeader>
 
-        <div className="px-6 py-5">
+        <div className="px-4 sm:px-6 py-5">
           {submitted ? (
             /* Success State */
             <div
@@ -146,10 +174,38 @@ export default function BookingModal({
               >
                 Inquiry Submitted Successfully!
               </h3>
-              <p className="text-gray-500 text-sm leading-relaxed mb-6 max-w-[340px]">
+              <p className="text-gray-500 text-sm leading-relaxed mb-4 max-w-[340px]">
                 Your travel inquiry has been submitted successfully. Our travel
                 expert will contact you shortly.
               </p>
+              {/* Auto email notification banner */}
+              <div
+                style={{
+                  background: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  borderRadius: 10,
+                  padding: "10px 16px",
+                  marginBottom: 16,
+                  width: "100%",
+                  textAlign: "left",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#1e40af",
+                    marginBottom: 2,
+                  }}
+                >
+                  ✉️ Auto Email Sent
+                </div>
+                <div style={{ fontSize: 12, color: "#374151" }}>
+                  Confirmation email sent to{" "}
+                  <strong>{form.email || "your email"}</strong> and
+                  admin@travelnworld.com
+                </div>
+              </div>
               <a
                 href={`https://wa.me/917290087054?text=${whatsappText}`}
                 target="_blank"
@@ -195,7 +251,7 @@ export default function BookingModal({
                     required
                     value={form.fullName}
                     onChange={(e) => handleChange("fullName", e.target.value)}
-                    className="h-10 rounded-xl border-gray-200"
+                    className="h-10 rounded-xl border-gray-200 w-full"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -213,7 +269,7 @@ export default function BookingModal({
                     required
                     value={form.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className="h-10 rounded-xl border-gray-200"
+                    className="h-10 rounded-xl border-gray-200 w-full"
                   />
                 </div>
               </div>
@@ -233,7 +289,7 @@ export default function BookingModal({
                   required
                   value={form.email}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  className="h-10 rounded-xl border-gray-200"
+                  className="h-10 rounded-xl border-gray-200 w-full"
                 />
               </div>
 
@@ -252,7 +308,7 @@ export default function BookingModal({
                   required
                   value={form.destination}
                   onChange={(e) => handleChange("destination", e.target.value)}
-                  className="h-10 rounded-xl border-gray-200"
+                  className="h-10 rounded-xl border-gray-200 w-full"
                 />
               </div>
 
@@ -271,7 +327,7 @@ export default function BookingModal({
                     required
                     value={form.travelDate}
                     onChange={(e) => handleChange("travelDate", e.target.value)}
-                    className="h-10 rounded-xl border-gray-200"
+                    className="h-10 rounded-xl border-gray-200 w-full"
                     min={new Date().toISOString().split("T")[0]}
                   />
                 </div>
@@ -280,7 +336,7 @@ export default function BookingModal({
                     htmlFor="bm-travelers"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Number of Travelers <span className="text-red-500">*</span>
+                    No. of Travelers <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="bm-travelers"
@@ -291,7 +347,7 @@ export default function BookingModal({
                     min={1}
                     value={form.travelers}
                     onChange={(e) => handleChange("travelers", e.target.value)}
-                    className="h-10 rounded-xl border-gray-200"
+                    className="h-10 rounded-xl border-gray-200 w-full"
                   />
                 </div>
               </div>
@@ -311,7 +367,7 @@ export default function BookingModal({
                   placeholder="e.g. ₹50,000"
                   value={form.budget}
                   onChange={(e) => handleChange("budget", e.target.value)}
-                  className="h-10 rounded-xl border-gray-200"
+                  className="h-10 rounded-xl border-gray-200 w-full"
                 />
               </div>
 
@@ -320,16 +376,16 @@ export default function BookingModal({
                   htmlFor="bm-message"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Message / Special Request{" "}
+                  Message{" "}
                   <span className="text-gray-400 font-normal">(optional)</span>
                 </Label>
                 <Textarea
                   id="bm-message"
                   data-ocid="booking.message_textarea"
-                  placeholder="Any special requirements, preferences, or questions..."
+                  placeholder="Any special requirements or questions..."
                   value={form.message}
                   onChange={(e) => handleChange("message", e.target.value)}
-                  className="rounded-xl border-gray-200 resize-none"
+                  className="rounded-xl border-gray-200 resize-none w-full"
                   rows={3}
                 />
               </div>

@@ -10,6 +10,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { Link } from "@tanstack/react-router";
 import {
   BookCheck,
   MapPin,
@@ -2068,13 +2069,13 @@ function AgencyCard({ agency, index }: AgencyCardProps) {
               Register as a travel partner to access full contact details and
               partner profiles.
             </p>
-            <a
-              href="/register"
-              className="block w-full py-3 px-6 bg-[#E53935] hover:bg-red-700 text-white font-semibold rounded-xl transition-colors duration-200 mb-3"
+            <Link
+              to="/partner"
+              className="block w-full py-3 px-6 bg-[#E53935] hover:bg-red-700 text-white font-semibold rounded-xl transition-colors duration-200 mb-3 text-center"
               data-ocid="partners.contact_modal.register_button"
             >
               Register as Travel Partner
-            </a>
+            </Link>
             <button
               type="button"
               onClick={() => setShowContactModal(false)}
@@ -2159,7 +2160,7 @@ export default function Partners() {
       {/* HEADER */}
       <section
         data-ocid="partners.section"
-        className="relative pt-4 pb-12 overflow-hidden"
+        className="relative pt-4 pb-8 sm:pb-12 overflow-hidden"
       >
         <div className="blue-gradient absolute inset-0" />
         <div
@@ -2182,11 +2183,11 @@ export default function Partners() {
               100% Verified & Background-Checked
             </span>
           </div>
-          <h1 className="font-bold text-4xl md:text-5xl lg:text-6xl text-white mb-4 animate-fade-up">
+          <h1 className="font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white mb-4 animate-fade-up break-words">
             Verified Travel Partners Across India
           </h1>
           <p
-            className="text-lg md:text-xl max-w-2xl mx-auto mb-10 animate-fade-up"
+            className="text-sm sm:text-lg md:text-xl max-w-2xl mx-auto mb-8 sm:mb-10 animate-fade-up"
             style={{ color: "rgba(255,255,255,0.8)", animationDelay: "0.15s" }}
           >
             Discover 150+ thoroughly vetted travel agencies trusted by thousands
@@ -2247,7 +2248,7 @@ export default function Partners() {
       <section className="bg-white sticky top-16 md:top-[72px] z-30 border-b border-gray-200 shadow-sm">
         <div className="container-custom py-4">
           {/* Search bar */}
-          <div className="relative mb-3 max-w-2xl mx-auto md:mx-0">
+          <div className="relative mb-3 w-full max-w-2xl mx-auto md:mx-0">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
               data-ocid="partners.search_input"
@@ -2276,8 +2277,8 @@ export default function Partners() {
               </button>
             ))}
           </div>
-          {/* City filters */}
-          <div className="flex flex-wrap gap-2">
+          {/* City filters - scrollable on mobile */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
             {CITIES.map((city) => (
               <button
                 key={city}
@@ -2357,7 +2358,7 @@ export default function Partners() {
           ) : (
             <>
               {/* Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
                 {pageItems.map((agency, i) => (
                   <AgencyCard key={agency.id} agency={agency} index={i} />
                 ))}

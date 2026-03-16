@@ -10,7 +10,7 @@ export default function PageHero({
   breadcrumb,
 }: PageHeroProps) {
   return (
-    <section className="relative pt-10 pb-12 md:pt-14 md:pb-16 blue-gradient overflow-hidden">
+    <section className="relative pt-8 pb-10 md:pt-10 md:pb-12 blue-gradient overflow-hidden">
       {/* Geometric decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div
@@ -39,12 +39,12 @@ export default function PageHero({
             {breadcrumb}
           </span>
         )}
-        <h1 className="font-bold text-4xl md:text-5xl lg:text-6xl text-white mb-4">
+        <h1 className="font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-white mb-4 break-words">
           {title}
         </h1>
         {subtitle && (
           <p
-            className="text-lg md:text-xl max-w-2xl mx-auto"
+            className="text-base md:text-lg lg:text-xl max-w-2xl mx-auto"
             style={{ color: "rgba(255,255,255,0.75)" }}
           >
             {subtitle}

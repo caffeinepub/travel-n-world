@@ -27,7 +27,7 @@ export function useSubmitPartnerRegistration() {
 
 export function useSubmitContactForm() {
   return useMutation({
-    mutationFn: async (_data: {
+    mutationFn: async (data: {
       name: string;
       email: string;
       phone: string;
@@ -35,6 +35,32 @@ export function useSubmitContactForm() {
       message: string;
     }) => {
       await new Promise((r) => setTimeout(r, 800));
+      try {
+        const existing = JSON.parse(
+          localStorage.getItem("tnw_booking_inquiries") || "[]",
+        );
+        const inquiry = {
+          id: Date.now(),
+          customerName: data.name,
+          phone: data.phone,
+          email: data.email,
+          destination: data.subject || "General Inquiry",
+          travelDate: "",
+          travelers: "",
+          budget: "",
+          message: data.message,
+          date: new Date().toLocaleDateString("en-IN"),
+          status: "new",
+          source: "Contact Form",
+          isNew: true,
+        };
+        localStorage.setItem(
+          "tnw_booking_inquiries",
+          JSON.stringify([inquiry, ...existing]),
+        );
+      } catch {
+        // silently ignore storage errors
+      }
     },
   });
 }

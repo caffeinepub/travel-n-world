@@ -32,13 +32,13 @@ export default function Footer() {
   return (
     <footer style={{ background: "#0F172A" }} className="text-white">
       {/* Main Footer */}
-      <div className="container-custom py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div className="container-custom py-10 md:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
           {/* Brand */}
-          <div className="lg:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2.5 mb-5">
               <div
-                className="p-2 rounded-xl"
+                className="p-2 rounded-xl flex-shrink-0"
                 style={{ background: "rgba(255,255,255,0.1)" }}
               >
                 <Plane className="h-5 w-5 text-[#93C5FD]" />
@@ -60,7 +60,7 @@ export default function Footer() {
               with premium booking solutions and unbeatable rates.
             </p>
             {/* Social Links */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {SOCIAL.map(({ icon: Icon, href, label, color }) => (
                 <a
                   key={label}
@@ -98,10 +98,10 @@ export default function Footer() {
                 <li key={link.to}>
                   <Link
                     to={link.to}
-                    className="text-sm transition-colors flex items-center gap-2 hover:text-white"
+                    className="text-sm transition-colors flex items-center gap-2 hover:text-white break-words"
                     style={{ color: "rgba(255,255,255,0.65)" }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#93C5FD] opacity-60" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#93C5FD] opacity-60 flex-shrink-0" />
                     {link.label}
                   </Link>
                 </li>
@@ -129,10 +129,10 @@ export default function Footer() {
                 <li key={s.to}>
                   <Link
                     to={s.to}
-                    className="text-sm transition-colors flex items-center gap-2 hover:text-white"
+                    className="text-sm transition-colors flex items-center gap-2 hover:text-white break-words"
                     style={{ color: "rgba(255,255,255,0.65)" }}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#93C5FD] opacity-60" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#93C5FD] opacity-60 flex-shrink-0" />
                     {s.label}
                   </Link>
                 </li>
@@ -149,7 +149,7 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="h-4 w-4 text-[#93C5FD] mt-0.5 flex-shrink-0" />
                 <span
-                  className="text-sm"
+                  className="text-sm break-words"
                   style={{ color: "rgba(255,255,255,0.65)" }}
                 >
                   Dwarka Mor, Vipin Garden, Nawada, Delhi – 110059
@@ -169,7 +169,7 @@ export default function Footer() {
                 <Mail className="h-4 w-4 text-[#93C5FD] flex-shrink-0" />
                 <a
                   href="mailto:info@travelnworld.in"
-                  className="text-sm transition-colors hover:text-white"
+                  className="text-sm transition-colors hover:text-white break-all"
                   style={{ color: "rgba(255,255,255,0.65)" }}
                 >
                   info@travelnworld.in
@@ -179,8 +179,8 @@ export default function Footer() {
             <div
               className="mt-6 p-4 rounded-xl border"
               style={{
-                background: "rgba(var(--accent), 0.1)",
-                borderColor: "rgba(var(--accent), 0.2)",
+                background: "rgba(255,255,255,0.05)",
+                borderColor: "rgba(255,255,255,0.1)",
               }}
             >
               <p className="text-[#93C5FD] text-xs font-semibold">
@@ -199,8 +199,11 @@ export default function Footer() {
 
       {/* Bottom Bar */}
       <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-        <div className="container-custom py-5 flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
+        <div className="container-custom py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p
+            className="text-xs text-center sm:text-left"
+            style={{ color: "rgba(255,255,255,0.45)" }}
+          >
             © {year} Travel N World. All rights reserved.
           </p>
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
@@ -210,7 +213,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors hover:text-white"
-              style={{ color: "rgba(var(--accent), 0.7)" }}
+              style={{ color: "rgba(255,255,255,0.6)" }}
             >
               caffeine.ai
             </a>

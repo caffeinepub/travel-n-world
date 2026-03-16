@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   BookOpen,
   CreditCard,
@@ -149,9 +149,36 @@ const PARTNER_PLANS: Record<
   },
 };
 
+type StoredPlan = {
+  plan: string;
+  price: string;
+  duration: string;
+  agentName: string;
+  company: string;
+  phone: string;
+  email: string;
+  startDate: string;
+  expiryDate: string;
+  status: string;
+};
+type StoredLead = {
+  id: number;
+  customer: string;
+  phone: string;
+  email: string;
+  destination: string;
+  budget: string;
+  travelDate: string;
+  travelers: number;
+  message?: string;
+  leadSource: string;
+  status: string;
+  isNew: boolean;
+  date: string;
+};
 type Tab = "overview" | "leads" | "inquiries" | "bookings";
 
-function Badge({
+function StatusBadge({
   text,
   bg,
   color,
@@ -180,6 +207,9 @@ export default function PartnerDashboard() {
     email: string;
   } | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [storedPlan, setStoredPlan] = useState<StoredPlan | null>(null);
+  const [lsLeads, setLsLeads] = useState<StoredLead[]>([]);
+  const [leadActions, setLeadActions] = useState<Record<number, string>>({});
 
   useEffect(() => {
     const stored = localStorage.getItem("partner_logged_in");
@@ -188,6 +218,27 @@ export default function PartnerDashboard() {
       return;
     }
     setPartnerInfo(JSON.parse(stored));
+
+    try {
+      const plan = localStorage.getItem("tnw_partner_plan");
+      if (plan) setStoredPlan(JSON.parse(plan));
+    } catch {
+      /* ignore */
+    }
+
+    try {
+      const leads = localStorage.getItem("travel_leads");
+      if (leads) setLsLeads(JSON.parse(leads));
+    } catch {
+      /* ignore */
+    }
+
+    try {
+      const actions = localStorage.getItem("tnw_partner_lead_actions");
+      if (actions) setLeadActions(JSON.parse(actions));
+    } catch {
+      /* ignore */
+    }
   }, [navigate]);
 
   if (!partnerInfo) return null;
@@ -199,7 +250,29 @@ export default function PartnerDashboard() {
   const myBookings = ALL_BOOKINGS.filter(
     (b) => b.partner === partnerInfo.company,
   );
-  const planInfo = PARTNER_PLANS[partnerInfo.company];
+  const planInfo =
+    storedPlan ||
+    (PARTNER_PLANS[partnerInfo.company]
+      ? {
+          plan: PARTNER_PLANS[partnerInfo.company].plan,
+          price: "-",
+          duration: "-",
+          agentName: partnerInfo.name,
+          company: partnerInfo.company,
+          phone: "-",
+          email: partnerInfo.email,
+          startDate: "-",
+          expiryDate: PARTNER_PLANS[partnerInfo.company].expiry,
+          status: PARTNER_PLANS[partnerInfo.company].status,
+        }
+      : null);
+  const hasPlan = !!planInfo;
+
+  const markLead = (id: number, action: string) => {
+    const updated = { ...leadActions, [id]: action };
+    setLeadActions(updated);
+    localStorage.setItem("tnw_partner_lead_actions", JSON.stringify(updated));
+  };
 
   const logout = () => {
     localStorage.removeItem("partner_logged_in");
@@ -208,7 +281,11 @@ export default function PartnerDashboard() {
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: Users },
-    { id: "leads", label: "Assigned Leads", icon: TrendingUp },
+    {
+      id: "leads",
+      label: hasPlan ? "All Available Leads" : "Leads (Locked)",
+      icon: TrendingUp,
+    },
     { id: "inquiries", label: "Customer Inquiries", icon: MessageSquare },
     { id: "bookings", label: "Booking History", icon: BookOpen },
   ];
@@ -276,6 +353,7 @@ export default function PartnerDashboard() {
           padding: "0 24px",
           display: "flex",
           gap: "4px",
+          overflowX: "auto",
         }}
       >
         {tabs.map((tab) => {
@@ -361,9 +439,9 @@ export default function PartnerDashboard() {
                 },
                 {
                   label: "Plan Status",
-                  value: planInfo?.status || "None",
-                  color: "#dc2626",
-                  bg: "#fee2e2",
+                  value: planInfo?.status || "No Plan",
+                  color: planInfo ? "#059669" : "#dc2626",
+                  bg: planInfo ? "#d1fae5" : "#fee2e2",
                   icon: CreditCard,
                 },
               ].map((s) => {
@@ -418,7 +496,7 @@ export default function PartnerDashboard() {
               })}
             </div>
 
-            {planInfo && (
+            {planInfo ? (
               <div
                 style={{
                   background: "#fff",
@@ -481,7 +559,8 @@ export default function PartnerDashboard() {
                         fontSize: "15px",
                       }}
                     >
-                      {planInfo.expiry}
+                      {planInfo.expiryDate?.split("T")[0] ||
+                        planInfo.expiryDate}
                     </div>
                   </div>
                   <div>
@@ -494,7 +573,7 @@ export default function PartnerDashboard() {
                     >
                       STATUS
                     </div>
-                    <Badge
+                    <StatusBadge
                       text={planInfo.status}
                       bg="#dcfce7"
                       color="#166534"
@@ -502,11 +581,43 @@ export default function PartnerDashboard() {
                   </div>
                 </div>
               </div>
+            ) : (
+              <div
+                style={{
+                  background: "#fff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "12px",
+                  padding: "24px",
+                  marginBottom: "20px",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 600,
+                    color: "#374151",
+                    marginBottom: "12px",
+                  }}
+                >
+                  No active membership plan.
+                </div>
+                <a
+                  href="/pricing"
+                  style={{
+                    color: "#1e40af",
+                    fontWeight: 600,
+                    textDecoration: "underline",
+                  }}
+                >
+                  View & Purchase Plans →
+                </a>
+              </div>
             )}
           </div>
         )}
 
-        {/* Leads */}
+        {/* Leads Tab */}
         {activeTab === "leads" && (
           <div data-ocid="partner.leads.section">
             <h2
@@ -518,128 +629,522 @@ export default function PartnerDashboard() {
                 marginBottom: "20px",
               }}
             >
-              Assigned Leads
+              All Available Leads
             </h2>
-            {myLeads.length === 0 ? (
+
+            {!hasPlan ? (
               <div
-                data-ocid="partner.leads.empty_state"
+                data-ocid="partner.leads.locked_state"
                 style={{
-                  textAlign: "center",
-                  padding: "60px 20px",
-                  color: "#9ca3af",
-                  background: "#fff",
-                  borderRadius: "12px",
-                }}
-              >
-                No leads assigned yet.
-              </div>
-            ) : (
-              <div
-                style={{
+                  position: "relative",
                   background: "#fff",
                   borderRadius: "12px",
                   border: "1px solid #e5e7eb",
-                  overflow: "auto",
+                  overflow: "hidden",
                 }}
               >
-                <table
+                {/* Blurred preview rows */}
+                <div
                   style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    fontSize: "14px",
+                    filter: "blur(4px)",
+                    pointerEvents: "none",
+                    padding: "16px",
                   }}
                 >
-                  <thead>
-                    <tr
+                  {["Customer A", "Customer B", "Customer C"].map((c) => (
+                    <div
+                      key={c}
                       style={{
-                        background: "#f8fafc",
-                        borderBottom: "1px solid #e5e7eb",
+                        display: "grid",
+                        gridTemplateColumns: "repeat(5, 1fr)",
+                        gap: "12px",
+                        padding: "12px 0",
+                        borderBottom: "1px solid #f3f4f6",
                       }}
                     >
-                      {[
-                        "Customer",
-                        "Destination",
-                        "Travel Date",
-                        "Travelers",
-                        "Budget",
-                        "Status",
-                      ].map((h) => (
-                        <th
-                          key={h}
-                          style={{
-                            padding: "12px 16px",
-                            textAlign: "left",
-                            fontWeight: 600,
-                            color: "#374151",
-                            fontSize: "12px",
-                            textTransform: "uppercase",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myLeads.map((l, idx) => (
-                      <tr
-                        key={l.id}
-                        data-ocid={`partner.leads.row.${idx + 1}`}
-                        style={{ borderBottom: "1px solid #f3f4f6" }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "#f9fafb";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "transparent";
+                      {["col1", "col2", "col3", "col4", "col5"].map(
+                        (colKey) => (
+                          <div
+                            key={colKey}
+                            style={{
+                              background: "#e5e7eb",
+                              borderRadius: "6px",
+                              height: "20px",
+                              opacity: 0.6,
+                            }}
+                          />
+                        ),
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {/* Overlay */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "20px",
+                    padding: "32px",
+                    background: "rgba(255,255,255,0.85)",
+                  }}
+                >
+                  <div style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        fontSize: "20px",
+                        fontWeight: 700,
+                        color: "#111827",
+                        fontFamily: "Poppins, sans-serif",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      🔒 Lead Access Locked
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        color: "#6b7280",
+                        maxWidth: "400px",
+                      }}
+                    >
+                      Upgrade to a B2B Membership Plan to unlock customer leads.
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "12px",
+                      flexWrap: "wrap",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {[
+                      {
+                        name: "Starter",
+                        price: "₹3,000",
+                        duration: "3 months",
+                      },
+                      {
+                        name: "Professional",
+                        price: "₹6,000",
+                        duration: "6 months",
+                      },
+                      { name: "Premium", price: "₹12,000", duration: "1 year" },
+                    ].map((p) => (
+                      <div
+                        key={p.name}
+                        style={{
+                          background: "#EFF6FF",
+                          border: "1px solid #DBEAFE",
+                          borderRadius: "10px",
+                          padding: "12px 16px",
+                          textAlign: "center",
+                          minWidth: "110px",
                         }}
                       >
-                        <td
+                        <div
                           style={{
-                            padding: "12px 16px",
-                            fontWeight: 600,
-                            color: "#111827",
+                            fontWeight: 700,
+                            color: "#1e40af",
+                            fontSize: "15px",
                           }}
                         >
-                          {l.customer}
-                        </td>
-                        <td style={{ padding: "12px 16px", color: "#374151" }}>
-                          {l.destination}
-                        </td>
-                        <td style={{ padding: "12px 16px", color: "#374151" }}>
-                          {l.travelDate}
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px 16px",
-                            color: "#374151",
-                            textAlign: "center",
-                          }}
-                        >
-                          {l.travelers}
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px 16px",
-                            fontWeight: 600,
-                            color: "#111827",
-                          }}
-                        >
-                          {l.budget}
-                        </td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <Badge
-                            text={l.status}
-                            bg={l.status === "Active" ? "#dcfce7" : "#dbeafe"}
-                            color={
-                              l.status === "Active" ? "#166534" : "#1e3a8a"
-                            }
-                          />
-                        </td>
-                      </tr>
+                          {p.price}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#374151" }}>
+                          {p.name}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#9ca3af" }}>
+                          {p.duration}
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                  <Link
+                    to="/pricing"
+                    style={{
+                      background: "#1e40af",
+                      color: "#fff",
+                      padding: "10px 24px",
+                      borderRadius: "10px",
+                      fontWeight: 600,
+                      fontSize: "14px",
+                      textDecoration: "none",
+                    }}
+                  >
+                    View Membership Plans →
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {/* Live leads from localStorage */}
+                {lsLeads.length > 0 && (
+                  <div
+                    style={{
+                      background: "#fff",
+                      borderRadius: "12px",
+                      border: "1px solid #e5e7eb",
+                      overflow: "auto",
+                      marginBottom: "24px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "12px 16px",
+                        borderBottom: "1px solid #f3f4f6",
+                        background: "#f0fdf4",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          color: "#166534",
+                        }}
+                      >
+                        🟢 Live Submitted Leads ({lsLeads.length})
+                      </span>
+                    </div>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        fontSize: "14px",
+                      }}
+                    >
+                      <thead>
+                        <tr
+                          style={{
+                            background: "#f8fafc",
+                            borderBottom: "1px solid #e5e7eb",
+                          }}
+                        >
+                          {[
+                            "Customer",
+                            "Phone",
+                            "Email",
+                            "Destination",
+                            "Travel Date",
+                            "Travelers",
+                            "Budget",
+                            "Status",
+                            "Actions",
+                          ].map((h) => (
+                            <th
+                              key={h}
+                              style={{
+                                padding: "12px 16px",
+                                textAlign: "left",
+                                fontWeight: 600,
+                                color: "#374151",
+                                fontSize: "12px",
+                                textTransform: "uppercase",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lsLeads.map((l, idx) => {
+                          const actionStatus = leadActions[l.id];
+                          return (
+                            <tr
+                              key={l.id}
+                              data-ocid={`partner.leads.row.${idx + 1}`}
+                              style={{ borderBottom: "1px solid #f3f4f6" }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "#f9fafb";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background =
+                                  "transparent";
+                              }}
+                            >
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  fontWeight: 600,
+                                  color: "#111827",
+                                }}
+                              >
+                                {l.customer}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                <a
+                                  href={`tel:${l.phone}`}
+                                  style={{
+                                    color: "#1e40af",
+                                    textDecoration: "none",
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  {l.phone}
+                                </a>
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#374151",
+                                  fontSize: "13px",
+                                }}
+                              >
+                                {l.email}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#374151",
+                                }}
+                              >
+                                {l.destination}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#374151",
+                                }}
+                              >
+                                {l.travelDate}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  color: "#374151",
+                                  textAlign: "center",
+                                }}
+                              >
+                                {l.travelers}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "12px 16px",
+                                  fontWeight: 600,
+                                  color: "#111827",
+                                }}
+                              >
+                                {l.budget}
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                <StatusBadge
+                                  text={actionStatus || "New"}
+                                  bg={
+                                    actionStatus === "Converted"
+                                      ? "#dcfce7"
+                                      : actionStatus === "Contacted"
+                                        ? "#fef9c3"
+                                        : "#dbeafe"
+                                  }
+                                  color={
+                                    actionStatus === "Converted"
+                                      ? "#166534"
+                                      : actionStatus === "Contacted"
+                                        ? "#854d0e"
+                                        : "#1e3a8a"
+                                  }
+                                />
+                              </td>
+                              <td style={{ padding: "12px 16px" }}>
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                  <button
+                                    type="button"
+                                    data-ocid={`partner.leads.contact_button.${idx + 1}`}
+                                    onClick={() => markLead(l.id, "Contacted")}
+                                    style={{
+                                      padding: "4px 10px",
+                                      background: "#fef3c7",
+                                      color: "#92400e",
+                                      border: "1px solid #fcd34d",
+                                      borderRadius: 6,
+                                      cursor: "pointer",
+                                      fontSize: 12,
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    Mark Contacted
+                                  </button>
+                                  <button
+                                    type="button"
+                                    data-ocid={`partner.leads.convert_button.${idx + 1}`}
+                                    onClick={() => markLead(l.id, "Converted")}
+                                    style={{
+                                      padding: "4px 10px",
+                                      background: "#dcfce7",
+                                      color: "#166534",
+                                      border: "1px solid #86efac",
+                                      borderRadius: 6,
+                                      cursor: "pointer",
+                                      fontSize: 12,
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    Mark Converted
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Assigned leads from admin */}
+                {myLeads.length > 0 && (
+                  <div
+                    style={{
+                      background: "#fff",
+                      borderRadius: "12px",
+                      border: "1px solid #e5e7eb",
+                      overflow: "auto",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "12px 16px",
+                        borderBottom: "1px solid #f3f4f6",
+                        background: "#eff6ff",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          color: "#1e40af",
+                        }}
+                      >
+                        📋 Admin Assigned Leads ({myLeads.length})
+                      </span>
+                    </div>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        fontSize: "14px",
+                      }}
+                    >
+                      <thead>
+                        <tr
+                          style={{
+                            background: "#f8fafc",
+                            borderBottom: "1px solid #e5e7eb",
+                          }}
+                        >
+                          {[
+                            "Customer",
+                            "Destination",
+                            "Travel Date",
+                            "Travelers",
+                            "Budget",
+                            "Status",
+                          ].map((h) => (
+                            <th
+                              key={h}
+                              style={{
+                                padding: "12px 16px",
+                                textAlign: "left",
+                                fontWeight: 600,
+                                color: "#374151",
+                                fontSize: "12px",
+                                textTransform: "uppercase",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {myLeads.map((l, idx) => (
+                          <tr
+                            key={l.id}
+                            data-ocid={`partner.leads.assigned.row.${idx + 1}`}
+                            style={{ borderBottom: "1px solid #f3f4f6" }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "#f9fafb";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "transparent";
+                            }}
+                          >
+                            <td
+                              style={{
+                                padding: "12px 16px",
+                                fontWeight: 600,
+                                color: "#111827",
+                              }}
+                            >
+                              {l.customer}
+                            </td>
+                            <td
+                              style={{ padding: "12px 16px", color: "#374151" }}
+                            >
+                              {l.destination}
+                            </td>
+                            <td
+                              style={{ padding: "12px 16px", color: "#374151" }}
+                            >
+                              {l.travelDate}
+                            </td>
+                            <td
+                              style={{
+                                padding: "12px 16px",
+                                color: "#374151",
+                                textAlign: "center",
+                              }}
+                            >
+                              {l.travelers}
+                            </td>
+                            <td
+                              style={{
+                                padding: "12px 16px",
+                                fontWeight: 600,
+                                color: "#111827",
+                              }}
+                            >
+                              {l.budget}
+                            </td>
+                            <td style={{ padding: "12px 16px" }}>
+                              <StatusBadge
+                                text={l.status}
+                                bg={
+                                  l.status === "Active" ? "#dcfce7" : "#dbeafe"
+                                }
+                                color={
+                                  l.status === "Active" ? "#166534" : "#1e3a8a"
+                                }
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {lsLeads.length === 0 && myLeads.length === 0 && (
+                  <div
+                    data-ocid="partner.leads.empty_state"
+                    style={{
+                      textAlign: "center",
+                      padding: "60px 20px",
+                      color: "#9ca3af",
+                      background: "#fff",
+                      borderRadius: "12px",
+                    }}
+                  >
+                    No leads available yet.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -757,7 +1262,7 @@ export default function PartnerDashboard() {
                           {i.budget}
                         </td>
                         <td style={{ padding: "12px 16px" }}>
-                          <Badge
+                          <StatusBadge
                             text={i.status}
                             bg={i.status === "New" ? "#dbeafe" : "#fef9c3"}
                             color={i.status === "New" ? "#1e3a8a" : "#854d0e"}
@@ -884,7 +1389,7 @@ export default function PartnerDashboard() {
                           {b.date}
                         </td>
                         <td style={{ padding: "12px 16px" }}>
-                          <Badge
+                          <StatusBadge
                             text={b.status}
                             bg={
                               b.status === "Confirmed"

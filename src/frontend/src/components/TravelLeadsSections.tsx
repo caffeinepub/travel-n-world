@@ -17,7 +17,8 @@ import {
   MapPin,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { TravelInquiryForm } from "./TravelInquiryForm";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -262,6 +263,15 @@ const trustStats = [
   },
 ];
 
+type DisplayLead = {
+  id: number;
+  destination: string;
+  travelers: number;
+  budget: string;
+  date: string;
+  tag: string;
+};
+
 // ─── Lead Access Modal ────────────────────────────────────────────────────────
 function LeadAccessModal({
   open,
@@ -348,11 +358,7 @@ function LeadCard({
   lead,
   index,
   onViewContact,
-}: {
-  lead: (typeof travelLeads)[0];
-  index: number;
-  onViewContact: () => void;
-}) {
+}: { lead: DisplayLead; index: number; onViewContact: () => void }) {
   const isInt = lead.tag === "International";
   return (
     <div
@@ -428,20 +434,85 @@ function LeadCard({
 // ─── Main Export ─────────────────────────────────────────────────────────────
 export function TravelLeadsSections() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [allLeads, setAllLeads] = useState<DisplayLead[]>(travelLeads);
+
+  useEffect(() => {
+    try {
+      const stored: Array<{
+        id: number;
+        destination: string;
+        travelers: number;
+        budget: string;
+        date: string;
+      }> = JSON.parse(localStorage.getItem("travel_leads") || "[]");
+      const mapped: DisplayLead[] = stored.map((l) => ({
+        id: l.id,
+        destination: l.destination,
+        travelers: l.travelers,
+        budget: l.budget,
+        date: new Date(l.date).toLocaleDateString("en-IN", { month: "long" }),
+        tag: "Website",
+      }));
+      const merged = [...mapped, ...travelLeads].slice(0, 18);
+      setAllLeads(merged);
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
 
   return (
     <>
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* SUBMIT TRAVEL INQUIRY */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      <section
+        data-ocid="inquiry.section"
+        className="py-16"
+        style={{
+          background: "#F5F7FA",
+          borderTop: "1px solid #e5e7eb",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
+        <div className="container-custom">
+          <div className="text-center mb-10">
+            <span
+              className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3"
+              style={{ background: "rgba(30,64,175,0.1)", color: "#1E40AF" }}
+            >
+              Travel Inquiry
+            </span>
+            <h2
+              className="font-bold text-3xl md:text-4xl mb-3"
+              style={{ color: "#111827", fontFamily: "Poppins, sans-serif" }}
+            >
+              Planning Your Next Trip?
+            </h2>
+            <div
+              className="w-16 h-1 rounded-full mx-auto mb-4"
+              style={{ background: "#E53935" }}
+            />
+            <p
+              className="max-w-xl mx-auto text-base"
+              style={{ color: "#6B7280" }}
+            >
+              Submit your travel requirement and our expert travel agents will
+              contact you with the best packages.
+            </p>
+          </div>
+          <div className="max-w-2xl mx-auto">
+            <TravelInquiryForm />
+          </div>
+        </div>
+      </section>
+
       {/* ══════════════════════════════════════════════════════════════════ */}
       {/* PLATFORM TRUST STATS */}
       {/* ══════════════════════════════════════════════════════════════════ */}
       <section
         data-ocid="trust_stats.section"
         className="py-14"
-        style={{
-          background: "#F5F7FA",
-          borderTop: "1px solid #e5e7eb",
-          borderBottom: "1px solid #e5e7eb",
-        }}
+        style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}
       >
         <div className="container-custom">
           <div className="text-center mb-10">
@@ -458,7 +529,6 @@ export function TravelLeadsSections() {
               Trusted by Thousands of Travel Agents Across India
             </h2>
           </div>
-
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
             {trustStats.map((stat) => {
               const Icon = stat.icon;
@@ -503,7 +573,7 @@ export function TravelLeadsSections() {
       <section
         data-ocid="leads.section"
         className="py-16"
-        style={{ background: "#fff" }}
+        style={{ background: "#F5F7FA" }}
       >
         <div className="container-custom">
           <div className="text-center mb-12">
@@ -533,7 +603,7 @@ export function TravelLeadsSections() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {travelLeads.map((lead, i) => (
+            {allLeads.map((lead, i) => (
               <LeadCard
                 key={lead.id}
                 lead={lead}
@@ -561,7 +631,7 @@ export function TravelLeadsSections() {
       <section
         data-ocid="bookings.section"
         className="py-16"
-        style={{ background: "#F5F7FA" }}
+        style={{ background: "#fff" }}
       >
         <div className="container-custom">
           <div className="text-center mb-12">
@@ -620,7 +690,6 @@ export function TravelLeadsSections() {
                     Confirmed
                   </span>
                 </div>
-
                 <div
                   className="flex items-center gap-1.5 text-sm"
                   style={{ color: "#374151" }}
@@ -634,7 +703,6 @@ export function TravelLeadsSections() {
                     {booking.bookedBy}
                   </span>
                 </div>
-
                 <div
                   className="text-[11px] font-medium px-2.5 py-1 rounded-lg w-fit"
                   style={{

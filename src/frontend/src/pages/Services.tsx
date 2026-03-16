@@ -163,41 +163,41 @@ export default function Services() {
 
       <section className="section-padding bg-gray-50">
         <div className="container-custom">
-          <div className="text-center mb-12 reveal">
-            <h2 className="font-bold text-3xl md:text-4xl text-gray-900 mb-3">
+          <div className="text-center mb-10 sm:mb-12 reveal">
+            <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-gray-900 mb-3">
               B2B Travel Services
             </h2>
-            <p className="text-gray-500 text-base max-w-xl mx-auto">
+            <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
               Exclusive wholesale pricing and B2B-only access for registered
               travel agents
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7 items-stretch">
             {services.map((service, i) => (
               <div
                 key={service.title}
                 data-ocid={`services.card.${i + 1}`}
-                className="reveal bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-2xl hover:shadow-blue-50 transition-all duration-300 hover:-translate-y-2 cursor-pointer p-7 group flex flex-col"
+                className="reveal bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-2xl hover:shadow-blue-50 transition-all duration-300 hover:-translate-y-2 cursor-pointer p-5 sm:p-7 group flex flex-col h-full"
               >
                 {/* Icon + Badge row */}
                 <div className="flex items-start justify-between mb-5">
                   <div
-                    className={`w-14 h-14 ${service.iconBg} rounded-2xl flex items-center justify-center ${service.hoverBg} transition-colors duration-300`}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 ${service.iconBg} rounded-2xl flex items-center justify-center ${service.hoverBg} transition-colors duration-300 flex-shrink-0`}
                   >
                     <service.icon
-                      className={`h-6 w-6 ${service.iconColor} ${service.hoverIcon} transition-colors duration-300`}
+                      className={`h-5 w-5 sm:h-6 sm:w-6 ${service.iconColor} ${service.hoverIcon} transition-colors duration-300`}
                     />
                   </div>
                   <span
-                    className={`px-3 py-1 text-xs font-bold rounded-full ${service.badgeColor} border border-current/20`}
+                    className={`px-3 py-1 text-xs font-bold rounded-full ${service.badgeColor} border border-current/20 ml-2`}
                   >
                     {service.badge}
                   </span>
                 </div>
 
                 {/* Title */}
-                <h3 className="font-bold text-lg text-gray-900 mb-2">
+                <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-2">
                   {service.title}
                 </h3>
 
@@ -223,7 +223,7 @@ export default function Services() {
                 <Link
                   to={service.href}
                   data-ocid={`services.card.learnmore.${i + 1}`}
-                  className="inline-flex items-center gap-1.5 text-[#1E40AF] text-sm font-semibold hover:gap-2.5 transition-all"
+                  className="inline-flex items-center gap-1.5 text-[#1E40AF] text-sm font-semibold hover:gap-2.5 transition-all mt-auto"
                 >
                   Learn More <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -236,25 +236,25 @@ export default function Services() {
       {/* How It Works */}
       <section className="section-padding bg-white">
         <div className="container-custom">
-          <div className="text-center mb-14 reveal">
+          <div className="text-center mb-10 sm:mb-14 reveal">
             <span className="inline-block px-4 py-1.5 bg-blue-100 text-[#1E40AF] rounded-full text-sm font-semibold mb-4">
               Simple Process
             </span>
-            <h2 className="font-bold text-3xl md:text-4xl text-gray-900">
+            <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-gray-900">
               How It Works
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 relative">
             {steps.map((step, i) => (
               <div
                 key={step.title}
                 className={`reveal reveal-delay-${i + 1} relative`}
               >
-                <div className="bg-gray-50 rounded-2xl p-7 border border-gray-100 shadow-sm text-center hover:shadow-md transition-shadow">
-                  <div className="font-bold text-5xl text-blue-100 mb-3">
+                <div className="bg-gray-50 rounded-2xl p-6 sm:p-7 border border-gray-100 shadow-sm text-center hover:shadow-md transition-shadow h-full">
+                  <div className="font-bold text-4xl sm:text-5xl text-blue-100 mb-3">
                     {step.num}
                   </div>
-                  <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                  <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-2">
                     {step.title}
                   </h3>
                   <p className="text-gray-500 text-sm leading-relaxed">
@@ -269,11 +269,11 @@ export default function Services() {
               </div>
             ))}
           </div>
-          <div className="text-center mt-12 reveal">
+          <div className="text-center mt-10 sm:mt-12 reveal">
             <Button
               asChild
               size="lg"
-              className="bg-[#1E40AF] hover:bg-blue-800 active:bg-blue-900 text-white font-semibold h-14 px-10 rounded-2xl transition-all duration-300 hover:shadow-lg"
+              className="bg-[#1E40AF] hover:bg-blue-800 active:bg-blue-900 text-white font-semibold h-12 sm:h-14 px-8 sm:px-10 rounded-2xl transition-all duration-300 hover:shadow-lg w-full sm:w-auto"
             >
               <Link to="/partner">Get Started Today</Link>
             </Button>

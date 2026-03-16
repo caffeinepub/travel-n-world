@@ -574,11 +574,11 @@ function HeroSection() {
   };
 
   return (
-    <section className="flex flex-col md:flex-row min-h-[600px] md:min-h-[700px] lg:min-h-screen">
+    <section className="flex flex-col md:flex-row min-h-[500px] md:min-h-[600px] lg:min-h-screen">
       {/* ── Left: Image Slider ── */}
       <div
         data-ocid="hero.slider"
-        className="relative w-full md:w-[60%] min-h-[340px] md:min-h-full overflow-hidden"
+        className="relative w-full md:w-[60%] min-h-[260px] sm:min-h-[300px] md:min-h-full overflow-hidden"
       >
         {heroSlides.map((slide, i) => (
           <div
@@ -629,7 +629,7 @@ function HeroSection() {
             </span>
           </div>
           <h1
-            className="font-bold text-3xl md:text-4xl lg:text-5xl text-white mb-3 leading-tight"
+            className="font-bold text-xl sm:text-3xl md:text-4xl lg:text-5xl text-white mb-3 leading-tight"
             style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 800 }}
           >
             India's Trusted B2B
@@ -709,11 +709,11 @@ function HeroSection() {
 
       {/* ── Right: Inquiry Form ── */}
       <div
-        className="w-full md:w-[40%] flex items-center justify-center p-6 md:p-8 lg:p-10"
+        className="w-full md:w-[40%] flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-10"
         style={{ background: "#F5F7FA" }}
       >
         <div
-          className="w-full max-w-md bg-white rounded-2xl p-6 md:p-8"
+          className="w-full max-w-md bg-white rounded-2xl p-4 sm:p-6 md:p-8"
           style={{ boxShadow: "0 8px 40px rgba(30,64,175,0.13)" }}
         >
           {/* Card header */}
@@ -1158,7 +1158,7 @@ export default function Home() {
             {/* Card 1 — Verified Travel Partners */}
             <div
               data-ocid="stats.card.1"
-              className="flex flex-col items-center text-center bg-white rounded-2xl p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+              className="flex flex-col items-center text-center bg-white rounded-2xl p-5 sm:p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
               style={{
                 boxShadow: "0 2px 16px rgba(30,64,175,0.10)",
                 border: "1.5px solid #e0e7ff",
@@ -1171,7 +1171,7 @@ export default function Home() {
                 <ShieldCheck className="h-7 w-7" style={{ color: "#1E40AF" }} />
               </div>
               <div
-                className="font-extrabold text-4xl md:text-5xl mb-2"
+                className="font-extrabold text-3xl sm:text-4xl md:text-5xl mb-2"
                 style={{ color: "#1E40AF", letterSpacing: "-0.02em" }}
               >
                 150+
@@ -1187,7 +1187,7 @@ export default function Home() {
             {/* Card 2 — Travel Leads */}
             <div
               data-ocid="stats.card.2"
-              className="flex flex-col items-center text-center bg-white rounded-2xl p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+              className="flex flex-col items-center text-center bg-white rounded-2xl p-5 sm:p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
               style={{
                 boxShadow: "0 2px 16px rgba(229,57,53,0.10)",
                 border: "1.5px solid #fee2e2",
@@ -1200,7 +1200,7 @@ export default function Home() {
                 <Mail className="h-7 w-7" style={{ color: "#E53935" }} />
               </div>
               <div
-                className="font-extrabold text-4xl md:text-5xl mb-2"
+                className="font-extrabold text-3xl sm:text-4xl md:text-5xl mb-2"
                 style={{ color: "#E53935", letterSpacing: "-0.02em" }}
               >
                 12,000+
@@ -1216,7 +1216,7 @@ export default function Home() {
             {/* Card 3 — Confirmed Bookings */}
             <div
               data-ocid="stats.card.3"
-              className="flex flex-col items-center text-center bg-white rounded-2xl p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+              className="flex flex-col items-center text-center bg-white rounded-2xl p-5 sm:p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
               style={{
                 boxShadow: "0 2px 16px rgba(22,163,74,0.10)",
                 border: "1.5px solid #dcfce7",
@@ -1232,7 +1232,7 @@ export default function Home() {
                 />
               </div>
               <div
-                className="font-extrabold text-4xl md:text-5xl mb-2"
+                className="font-extrabold text-3xl sm:text-4xl md:text-5xl mb-2"
                 style={{ color: "#16a34a", letterSpacing: "-0.02em" }}
               >
                 5,000+
