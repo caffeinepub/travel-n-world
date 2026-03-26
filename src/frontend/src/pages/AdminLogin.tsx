@@ -11,7 +11,10 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem("tnw_admin_auth") === "true") {
+    if (
+      localStorage.getItem("tnw_admin_auth") === "true" ||
+      sessionStorage.getItem("tnw_admin_auth") === "true"
+    ) {
       navigate({ to: "/admin-dashboard" });
     }
   }, [navigate]);
@@ -23,6 +26,7 @@ export default function AdminLogin() {
     await new Promise((r) => setTimeout(r, 600));
     if (email === "admin@travelnworld.com" && password === "Admin@2024") {
       localStorage.setItem("tnw_admin_auth", "true");
+      sessionStorage.setItem("tnw_admin_auth", "true");
       navigate({ to: "/admin-dashboard" });
     } else {
       setError("Invalid credentials. Please try again.");

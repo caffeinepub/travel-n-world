@@ -1,3 +1,9 @@
+import { usePersistentState } from "@/hooks/usePersistentState";
+import {
+  ADMIN_STORAGE_KEYS,
+  hasStorageKey,
+  writeStorage,
+} from "@/lib/adminStorage";
 import { generatePartnerPlans } from "@/lib/generatePartnerPlans";
 import {
   type PartnerRegistration as StoredPartnerReg,
@@ -1153,7 +1159,7 @@ function OverviewTab({
     },
     {
       label: "Total Leads Generated",
-      value: "100,000+",
+      value: "20,000+",
       icon: TrendingUp,
       color: "#059669",
       bg: "#d1fae5",
@@ -1188,7 +1194,7 @@ function OverviewTab({
     },
     {
       label: "Total Hotel Bookings",
-      value: "40,000+",
+      value: "10,000+",
       icon: Building2,
       color: "#b45309",
       bg: "#fef3c7",
@@ -1202,7 +1208,7 @@ function OverviewTab({
     },
     {
       label: "DMC Service Bookings",
-      value: "25,000+",
+      value: "12,000+",
       icon: Globe,
       color: "#7c3aed",
       bg: "#ede9fe",
@@ -3968,7 +3974,6 @@ function PaymentRequestsTab({
       r.id === req.id ? { ...r, status: "approved" as const } : r,
     );
     setRequests(updated);
-    localStorage.setItem("tnw_payment_requests", JSON.stringify(updated));
   };
 
   const handleReject = (id: string) => {
@@ -3976,7 +3981,6 @@ function PaymentRequestsTab({
       r.id === id ? { ...r, status: "rejected" as const } : r,
     );
     setRequests(updated);
-    localStorage.setItem("tnw_payment_requests", JSON.stringify(updated));
   };
 
   const pending = requests.filter((r) => r.status === "pending");
@@ -4141,68 +4145,99 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [registrations, setRegistrations] = useState<PartnerReg[]>(() => {
-    const realSubmissions = getPartnerRegistrations().map(
-      (r: StoredPartnerReg, idx: number): PartnerReg => ({
-        id: idx + 1000,
-        name: r.name,
-        company: r.company,
-        phone: r.phone,
-        email: r.email,
-        city: r.city,
-        experience: r.experience,
-        date: r.date,
-        status: (r.status as PartnerStatus) || "Pending",
-        planStatus: "None",
-        isNew: r.isReal,
-      }),
-    );
-    const realIds = new Set(realSubmissions.map((r) => r.id));
-    const sampleData = INITIAL_REGISTRATIONS.filter((r) => !realIds.has(r.id));
-    return [...realSubmissions, ...sampleData];
-  });
-
-  const [leads, setLeads] = useState<Lead[]>(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("travel_leads") || "[]");
-      const storedLeads = stored.map((l: Lead, idx: number) => ({
-        ...l,
-        id: idx + 2000,
-        leadSource: (l.leadSource as Lead["leadSource"]) || "Form",
-        status: (l.status as LeadStatus) || "Active",
-        isNew: true,
-      }));
-      return storedLeads.length > 0
-        ? [...storedLeads, ...INITIAL_LEADS]
-        : INITIAL_LEADS;
-    } catch {
-      return INITIAL_LEADS;
-    }
-  });
-
-  const [inquiries, setInquiries] =
-    useState<BookingInquiry[]>(INITIAL_INQUIRIES);
-  const [plans, setPlans] = useState<PartnerPlan[]>(INITIAL_PLANS);
-  const [hotelBookings, setHotelBookings] =
-    useState<HotelBooking[]>(HOTEL_BOOKINGS);
-  const [dmcBookings, setDmcBookings] = useState<DmcBooking[]>(DMC_BOOKINGS);
-  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>(
-    () => {
-      try {
-        return JSON.parse(localStorage.getItem("tnw_payment_requests") || "[]");
-      } catch {
-        return [];
-      }
-    },
+  // ── Persistent registrations: merge real submissions with seed data ──────────
+  const [registrations, setRegistrations] = usePersistentState<PartnerReg[]>(
+    ADMIN_STORAGE_KEYS.PARTNER_REGISTRATIONS,
+    (() => {
+      const realSubmissions = getPartnerRegistrations().map(
+        (r: StoredPartnerReg, idx: number): PartnerReg => ({
+          id: idx + 1000,
+          name: r.name,
+          company: r.company,
+          phone: r.phone,
+          email: r.email,
+          city: r.city,
+          experience: r.experience,
+          date: r.date,
+          status: (r.status as PartnerStatus) || "Pending",
+          planStatus: "None",
+          isNew: r.isReal,
+        }),
+      );
+      const realIds = new Set(realSubmissions.map((r) => r.id));
+      const sampleData = INITIAL_REGISTRATIONS.filter(
+        (r) => !realIds.has(r.id),
+      );
+      return [...realSubmissions, ...sampleData];
+    })(),
   );
 
+  // ── Persistent leads ────────────────────────────────────────────────────────
+  const [leads, setLeads] = usePersistentState<Lead[]>(
+    ADMIN_STORAGE_KEYS.LEADS,
+    (() => {
+      try {
+        const stored = JSON.parse(localStorage.getItem("travel_leads") || "[]");
+        const storedLeads = stored.map((l: Lead, idx: number) => ({
+          ...l,
+          id: idx + 2000,
+          leadSource: (l.leadSource as Lead["leadSource"]) || "Form",
+          status: (l.status as LeadStatus) || "Active",
+          isNew: true,
+        }));
+        return storedLeads.length > 0
+          ? [...storedLeads, ...INITIAL_LEADS]
+          : INITIAL_LEADS;
+      } catch {
+        return INITIAL_LEADS;
+      }
+    })(),
+  );
+
+  // ── Persistent inquiries ────────────────────────────────────────────────────
+  const [inquiries, setInquiries] = usePersistentState<BookingInquiry[]>(
+    ADMIN_STORAGE_KEYS.BOOKING_INQUIRIES,
+    INITIAL_INQUIRIES,
+  );
+
+  // ── Persistent plans (seed once if not stored) ──────────────────────────────
+  const [plans, setPlans] = usePersistentState<PartnerPlan[]>(
+    ADMIN_STORAGE_KEYS.B2B_PLANS,
+    (() => {
+      if (!hasStorageKey(ADMIN_STORAGE_KEYS.B2B_PLANS)) {
+        writeStorage(ADMIN_STORAGE_KEYS.B2B_PLANS, INITIAL_PLANS);
+      }
+      return INITIAL_PLANS;
+    })(),
+  );
+
+  // ── Persistent hotel bookings ───────────────────────────────────────────────
+  const [hotelBookings, setHotelBookings] = usePersistentState<HotelBooking[]>(
+    ADMIN_STORAGE_KEYS.HOTEL_BOOKINGS,
+    HOTEL_BOOKINGS,
+  );
+
+  // ── Persistent DMC bookings ─────────────────────────────────────────────────
+  const [dmcBookings, setDmcBookings] = usePersistentState<DmcBooking[]>(
+    ADMIN_STORAGE_KEYS.DMC_BOOKINGS,
+    DMC_BOOKINGS,
+  );
+
+  // ── Persistent payment requests ─────────────────────────────────────────────
+  const [paymentRequests, setPaymentRequests] = usePersistentState<
+    PaymentRequest[]
+  >(ADMIN_STORAGE_KEYS.PAYMENT_REQUESTS, []);
+
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("tnw_admin_auth");
+    const isLoggedIn =
+      localStorage.getItem("tnw_admin_auth") === "true" ||
+      sessionStorage.getItem("tnw_admin_auth") === "true";
     if (!isLoggedIn) navigate({ to: "/admin-login" });
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("tnw_admin_auth");
+    sessionStorage.removeItem("tnw_admin_auth");
     navigate({ to: "/admin-login" });
   };
 
